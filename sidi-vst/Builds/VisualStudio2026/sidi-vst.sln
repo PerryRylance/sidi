@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio Version 18
+
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sidi-vst - Standalone Plugin", "sidi-vst_StandalonePlugin.vcxproj", "{7746FD96-B3B2-5F7F-A60E-3C10EA41D18B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04} = {E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sidi-vst - VST3", "sidi-vst_VST3.vcxproj", "{AAEB6304-1226-ADB0-B13B-9474C3A11497}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04} = {E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}
+		{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E} = {06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sidi-vst - Shared Code", "sidi-vst_SharedCode.vcxproj", "{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sidi-vst - VST3 Manifest Helper", "sidi-vst_VST3ManifestHelper.vcxproj", "{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAEB6304-1226-ADB0-B13B-9474C3A11497}.Debug|x64.ActiveCfg = Debug|x64
+		{AAEB6304-1226-ADB0-B13B-9474C3A11497}.Debug|x64.Build.0 = Debug|x64
+		{AAEB6304-1226-ADB0-B13B-9474C3A11497}.Release|x64.ActiveCfg = Release|x64
+		{AAEB6304-1226-ADB0-B13B-9474C3A11497}.Release|x64.Build.0 = Release|x64
+		{7746FD96-B3B2-5F7F-A60E-3C10EA41D18B}.Debug|x64.ActiveCfg = Debug|x64
+		{7746FD96-B3B2-5F7F-A60E-3C10EA41D18B}.Debug|x64.Build.0 = Debug|x64
+		{7746FD96-B3B2-5F7F-A60E-3C10EA41D18B}.Release|x64.ActiveCfg = Release|x64
+		{7746FD96-B3B2-5F7F-A60E-3C10EA41D18B}.Release|x64.Build.0 = Release|x64
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}.Debug|x64.ActiveCfg = Debug|x64
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}.Debug|x64.Build.0 = Debug|x64
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}.Release|x64.ActiveCfg = Release|x64
+		{E2F01CD1-FA9B-D8AC-4F74-B85E559A9E04}.Release|x64.Build.0 = Release|x64
+		{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}.Debug|x64.ActiveCfg = Debug|Win32
+		{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}.Debug|x64.Build.0 = Debug|Win32
+		{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}.Release|x64.ActiveCfg = Release|Win32
+		{06FEC9E6-7BFD-94C0-9A8B-D60EBC0DF18E}.Release|x64.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

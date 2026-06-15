@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@perry-rylance/midi": "^1.1.0"
+  }
+}
