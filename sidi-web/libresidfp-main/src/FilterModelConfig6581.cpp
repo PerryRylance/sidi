@@ -275,6 +275,14 @@ FilterModelConfig6581::FilterModelConfig6581() :
         }
     };
 
+#ifdef __EMSCRIPTEN__
+    filterSummer();
+    filterMixer();
+    filterGain();
+    filterResonance();
+    filterVcrVg();
+    filterVcrIds();
+#else
 #ifdef HAVE_JTHREADS
     using sidThread = std::jthread;
 #else
@@ -296,6 +304,8 @@ FilterModelConfig6581::FilterModelConfig6581() :
     thdVcrVg.join();
     thdVcrIds.join();
 #endif
+#endif
+
 }
 
 uint16_t* FilterModelConfig6581::getDAC(double adjustment) const

@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "jest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@perry-rylance/midi": "^1.1.0"
@@ -8,8 +8,10 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.3",
+    "happy-dom": "^20.10.3",
     "jest": "^30.4.2",
     "ts-jest": "^29.4.11",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }

@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeAll } from 'vitest';
 import createSIDModule from '../compiled/libresidfp';
 import * as path from 'path';
 
@@ -5,14 +6,7 @@ describe('libresidfp WASM bindings', () => {
   let module: any;
 
   beforeAll(async () => {
-    module = await createSIDModule({
-      locateFile: (filename: string) => {
-        if (filename.endsWith('.wasm')) {
-          return path.join(__dirname, 'compiled', filename);
-        }
-        return filename;
-      }
-    });
+    module = await createSIDModule({});
   });
 
   test('enums exist', () => {

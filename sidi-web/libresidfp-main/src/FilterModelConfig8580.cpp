@@ -193,6 +193,12 @@ FilterModelConfig8580::FilterModelConfig8580() :
         buildResonanceTable(opampModel, resGain);
     };
 
+#ifdef __EMSCRIPTEN__
+    filterSummer();
+    filterMixer();
+    filterGain();
+    filterResonance();
+#else
 #ifdef HAVE_JTHREADS
     using sidThread = std::jthread;
 #else
@@ -210,6 +216,8 @@ FilterModelConfig8580::FilterModelConfig8580() :
     thdGain.join();
     thdResonance.join();
 #endif
+#endif
+
 }
 
 } // namespace reSIDfp
