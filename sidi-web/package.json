@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "generate-demo-midis": "npx tsx scripts/generate-demo-midis.ts",
     "test": "vitest run"
   },
   "dependencies": {
