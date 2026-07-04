@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
-import { NoteOnEvent, Resolution, Event } from "@perry-rylance/midi";
+import { NoteOnEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
@@ -27,18 +27,19 @@ function mockSID(sid: any) {
     return sid;
 }
 
-describe('note pitch interpretation', () => {
-    let module: any;
+let module: any;
 
-    beforeAll(async () => {
-        module = await createSIDModule({});
-    });
+beforeAll(async () => {
+    module = await createSIDModule({});
+});
 
-    describe.each([
-        { channel: 0 },
-        { channel: 1 },
-        { channel: 2 },
-    ])('with midi channel $channel', ({ channel }) => {
+describe.each([
+    { channel: 0 },
+    { channel: 1 },
+    { channel: 2 },
+])('with midi channel $channel', ({ channel }) => {
+
+    describe('note pitch interpretation', () => {
 
         test.each([
             [21, [0xD4, 0x01]],
@@ -64,20 +65,42 @@ describe('note pitch interpretation', () => {
 
     });
 
+    describe('pulse width interpretation', () => {
+
+        test.each([
+            [0, [0x00, 0x00]],
+            [0x3F, [0xEF, 0x07]],
+            [0x7F, [0xFF, 0x0F]]
+        ])('for midi cc 70 value %i writes expected bytes', (width, [ lo, hi ]) => {
+
+            const event = new ControllerEvent(0, channel);
+            event.controller = 70;
+            event.value = width;
+
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            (driver as unknown as DriverExposingInterpret).interpret(event);
+
+            const address = channel * 7 + 2;
+
+            expect(sid.read(address)).toBe(lo);
+            expect(sid.read(address + 1)).toBe(hi);
+
+        });
+
+    });
+
+    // describe('adsr envelope interpretation', () => {
+
+    // });
+
+    // describe('filter interpretation', () => {
+
+    // });
+
+    // describe('volume interpretation', () => {
+
+    // });
+
 });
-
-// describe('pulse width interpretation', () => {
-
-// });
-
-// describe('adsr envelope interpretation', () => {
-
-// });
-
-// describe('filter interpretation', () => {
-
-// });
-
-// describe('volume interpretation', () => {
-
-// });

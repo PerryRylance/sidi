@@ -1,4 +1,4 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 
@@ -17,23 +17,63 @@ export default class Driver
         return Math.round((delta * 60 * this.clockFrequencyHz) / (this.bpm * this.resolution.ticksPerQuarterNote));
     }
 
+    private getExtrapolatedBitValue(value: number, inBits: number, outBits: number)
+    {
+        const maxIn = (1 << inBits) - 1;
+        const maxOut = (1 << outBits) - 1;
+        
+        if (maxIn <= 0) return 0;
+        
+        return Math.round((value / maxIn) * maxOut);
+    }
+
+    private interpretSetTempo(event: SetTempoEvent): void
+    {
+        this.bpm = event.bpm;
+    }
+
+    private interpretNoteOn(event: NoteOnEvent): void
+    {
+        const frequencyHz = 440 * Math.pow(2, (event.key - 69) / 12);
+        const regValue = Math.round((frequencyHz * 16777216) / this.clockFrequencyHz);
+        const clamped = Math.max(0, Math.min(65535, regValue));
+        
+        const offset = event.channel * 7;
+        const lo = clamped & 0xFF;
+        const hi = (clamped >> 8) & 0xFF;
+        
+        this.sid.write(offset + 0, lo);
+        this.sid.write(offset + 1, hi);
+    }
+
+    private interpretController(event: ControllerEvent): void
+    {
+        switch(event.controller)
+        {
+            case 70:
+                // NB: Pulse width modulation
+                const mapped = this.getExtrapolatedBitValue(event.value, 7, 12);
+                const offset = event.channel * 7 + 2;
+                const lo = mapped & 0xFF;
+                const hi = (mapped >> 8) & 0xFF;
+
+                this.sid.write(offset + 0, lo);
+                this.sid.write(offset + 1, hi);
+
+                break;
+        }
+    }
+
     private interpret(event: Event): void
     {
         if(event instanceof SetTempoEvent)
-            this.bpm = event.bpm;
-        else if(event instanceof NoteOnEvent)
-        {
-            const frequencyHz = 440 * Math.pow(2, (event.key - 69) / 12);
-            const regValue = Math.round((frequencyHz * 16777216) / this.clockFrequencyHz);
-            const clamped = Math.max(0, Math.min(65535, regValue));
-            
-            const offset = event.channel * 7;
-            const lo = clamped & 0xFF;
-            const hi = (clamped >> 8) & 0xFF;
-            
-            this.sid.write(offset + 0, lo);
-            this.sid.write(offset + 1, hi);
-        }
+            return this.interpretSetTempo(event)
+        
+        if(event instanceof NoteOnEvent)
+            return this.interpretNoteOn(event);
+        
+        if(event instanceof ControllerEvent)
+            return this.interpretController(event);
     }
 
     process(track: Track, buffer: Int16Array): number
