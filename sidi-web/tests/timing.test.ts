@@ -3,7 +3,7 @@ import { EndOfTrackEvent, File, SetTempoEvent, Track } from "@perry-rylance/midi
 import createSIDModule from '../compiled/libresidfp';
 import Driver from '../src/Driver';
 
-describe('Driver Timing', () => {
+describe('driver timing', () => {
   let module: any;
 
   beforeAll(async () => {
@@ -15,7 +15,7 @@ describe('Driver Timing', () => {
     { ticksPerQuarterNote: 96 },
     { ticksPerQuarterNote: 480 },
     { ticksPerQuarterNote: 960 },
-  ])('With $ticksPerQuarterNote ppqn', ({ ticksPerQuarterNote }) => {
+  ])('with $ticksPerQuarterNote ppqn', ({ ticksPerQuarterNote }) => {
 
     test.each([
       [4, 120, 88200],

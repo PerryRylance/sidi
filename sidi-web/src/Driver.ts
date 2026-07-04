@@ -1,4 +1,4 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 
@@ -21,6 +21,19 @@ export default class Driver
     {
         if(event instanceof SetTempoEvent)
             this.bpm = event.bpm;
+        else if(event instanceof NoteOnEvent)
+        {
+            const frequencyHz = 440 * Math.pow(2, (event.key - 69) / 12);
+            const regValue = Math.round((frequencyHz * 16777216) / this.clockFrequencyHz);
+            const clamped = Math.max(0, Math.min(65535, regValue));
+            
+            const offset = event.channel * 7;
+            const lo = clamped & 0xFF;
+            const hi = (clamped >> 8) & 0xFF;
+            
+            this.sid.write(offset + 0, lo);
+            this.sid.write(offset + 1, hi);
+        }
     }
 
     process(track: Track, buffer: Int16Array): number
