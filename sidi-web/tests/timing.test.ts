@@ -37,7 +37,7 @@ describe('Driver Timing', () => {
       track.events.push(eot);
 
       // NB: Resampler has internal state, group delay, fractional phase steps, and filtering overhead. To fully flush the requested clock cycles, the resampler generates extra samples.
-      // TODO: This is worth looking further into because it's going to cause timing drift especially if we're syncing animations up to the output.
+      // TODO: This is worth looking further into because it's going to cause timing drift especially if we're syncing animations up to the output. The bot assures me that this is a localized jitter and won't become a cumulative drift, may be worth running some tests on this with pieces several minutes long.
       const overshoot = 32;
       const pcmBuffer = new Int16Array(expectation + overshoot);
 

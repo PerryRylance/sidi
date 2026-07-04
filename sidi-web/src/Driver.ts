@@ -32,6 +32,7 @@ export default class Driver
         track.events.forEach((event) => {
 
             // TODO: Handle large deltas (eg that would overflow buffer)
+            // TODO: Suggest not using cycles but instead passing in the buffer size when using worklets, this won't allow clock to include the fractional phase steps
             const cycles = this.getNumCyclesFromDelta(event.delta);
             const samples = this.sid.clock(cycles, buffer);
             numSamplesWritten += samples;
