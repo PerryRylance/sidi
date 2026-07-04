@@ -11,6 +11,7 @@ export default class Driver
     constructor(private module: SIDModule, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
         this.sid = new module.SID;
+        this.sid.setSamplingParameters(this.clockFrequencyHz, module.SamplingMethod.DECIMATE, this.pcmFrequencyHz);
     }
 
     /*private getNumSamplesFromDelta(delta: number, bpm: number)
@@ -31,8 +32,9 @@ export default class Driver
 
             // TODO: Handle large deltas (eg that would overflow buffer)
             const cycles = this.getNumCyclesFromDelta(event.delta);
+            const samples = this.sid.clock(cycles, buffer);
 
-            numSamplesWritten += this.sid.clock(cycles, buffer);
+            numSamplesWritten += samples;
 
         });
 
