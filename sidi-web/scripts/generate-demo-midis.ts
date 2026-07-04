@@ -28,6 +28,21 @@ const files: DemoFiles = {
 
         return file;
 
+    },
+
+    "test-one-measure-silence": () => {
+
+        const file = new File();
+        const track = new Track();
+
+        file.tracks.push(track);
+
+        const eot = new EndOfTrackEvent(file.resolution.ticksPerQuarterNote * 4);
+
+        track.events.push(eot);
+
+        return file;
+
     }
 };
 

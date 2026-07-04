@@ -1,6 +1,5 @@
 import { describe, test, expect, beforeAll } from 'vitest';
 import createSIDModule from '../compiled/libresidfp';
-import * as path from 'path';
 
 describe('libresidfp WASM bindings', () => {
   let module: any;
