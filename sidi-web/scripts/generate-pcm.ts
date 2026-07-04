@@ -27,7 +27,8 @@ async function main() {
     const track = file.tracks[0];
 
     const module = await createSIDModule();
-    const driver = new Driver(module, file.resolution);
+    const sid = new module.SID();
+    const driver = new Driver(sid, file.resolution);
 
     // Create a buffer of 10 seconds of silence/PCM at 44.1kHz (441000 samples)
     const pcmBuffer = new Float64Array(44100 * 10);

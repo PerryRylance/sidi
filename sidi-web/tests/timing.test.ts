@@ -41,7 +41,8 @@ describe('Driver Timing', () => {
       const overshoot = 32;
       const pcmBuffer = new Int16Array(expectation + overshoot);
 
-      const driver = new Driver(module, file.resolution);
+      const sid = new module.SID();
+      const driver = new Driver(sid, file.resolution);
       const result = driver.process(track, pcmBuffer);
 
       // NB: Allow for overshoot (see above)

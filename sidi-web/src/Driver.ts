@@ -1,17 +1,15 @@
 import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent } from "@perry-rylance/midi";
-import { SID, SIDModule } from "../compiled/libresidfp";
+import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 
 export default class Driver
 {
-    private sid: SID;
     private bpm: number = 120;
     private pcmFrequencyHz: number = 44100;
 
-    constructor(private module: SIDModule, private resolution: Resolution, private clockFrequencyHz: number = Pal)
+    constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
-        this.sid = new module.SID;
-        this.sid.setSamplingParameters(this.clockFrequencyHz, module.SamplingMethod.DECIMATE, this.pcmFrequencyHz);
+        this.sid.setSamplingParameters(this.clockFrequencyHz, 0, this.pcmFrequencyHz);
     }
 
     private getNumCyclesFromDelta(delta: number): number
@@ -19,7 +17,7 @@ export default class Driver
         return Math.round((delta * 60 * this.clockFrequencyHz) / (this.bpm * this.resolution.ticksPerQuarterNote));
     }
 
-    interpret(event: Event): void
+    private interpret(event: Event): void
     {
         if(event instanceof SetTempoEvent)
             this.bpm = event.bpm;
