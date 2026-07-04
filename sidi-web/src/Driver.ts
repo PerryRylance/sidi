@@ -1,6 +1,7 @@
 import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
+import { PulseWidth } from "./ContinuousController";
 
 export default class Driver
 {
@@ -50,7 +51,7 @@ export default class Driver
     {
         switch(event.controller)
         {
-            case 70:
+            case PulseWidth:
                 // NB: Pulse width modulation
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 12);
                 const offset = event.channel * 7 + 2;

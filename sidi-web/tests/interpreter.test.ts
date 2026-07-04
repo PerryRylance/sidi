@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
+import { PulseWidth } from "../src/ContinuousController";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
     interpret: (event: Event) => void;
@@ -74,7 +75,7 @@ describe.each([
         ])('for midi cc 70 value %i writes expected bytes', (width, [ lo, hi ]) => {
 
             const event = new ControllerEvent(0, channel);
-            event.controller = 70;
+            event.controller = PulseWidth;
             event.value = width;
 
             const sid = mockSID(new module.SID());
