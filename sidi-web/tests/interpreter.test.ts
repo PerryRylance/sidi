@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
-import { PulseWidth } from "../src/ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain } from "../src/ContinuousController";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
     interpret: (event: Event) => void;
@@ -34,11 +34,7 @@ beforeAll(async () => {
     module = await createSIDModule({});
 });
 
-describe.each([
-    { channel: 0 },
-    { channel: 1 },
-    { channel: 2 },
-])('with midi channel $channel', ({ channel }) => {
+describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
     describe('note pitch interpretation', () => {
 
@@ -72,7 +68,7 @@ describe.each([
             [0, [0x00, 0x00]],
             [0x3F, [0xEF, 0x07]],
             [0x7F, [0xFF, 0x0F]]
-        ])('for midi cc 70 value %i writes expected bytes', (width, [ lo, hi ]) => {
+        ])(`for midi cc ${PulseWidth} value %i writes expected bytes`, (width, [ lo, hi ]) => {
 
             const event = new ControllerEvent(0, channel);
             event.controller = PulseWidth;
@@ -92,9 +88,41 @@ describe.each([
 
     });
 
-    // describe('adsr envelope interpretation', () => {
+    describe('adsr envelope interpretation', () => {
 
-    // });
+        test.each([
+            { controller: Attack, name: 'attack', offset: 5, shift: 4 },
+            { controller: Decay, name: 'decay', offset: 5, shift: 0 },
+            { controller: Sustain, name: 'sustain', offset: 6, shift: 4 },
+            { controller: Release, name: 'release', offset: 6, shift: 0 }
+        ])('$name (cc $controller) writes expected 4-bit value to register', ({ controller, offset, shift }) => {
+
+            const testValues = [
+                { ccValue: 0, expectedNibble: 0x0 },
+                { ccValue: 64, expectedNibble: 0x8 },
+                { ccValue: 127, expectedNibble: 0xF }
+            ];
+
+            for (const { ccValue, expectedNibble } of testValues) {
+                const event = new ControllerEvent(0, channel);
+                event.controller = controller;
+                event.value = ccValue;
+
+                const sid = mockSID(new module.SID());
+                const driver = new Driver(sid, new Resolution());
+
+                (driver as unknown as DriverExposingInterpret).interpret(event);
+
+                const address = channel * 7 + offset;
+                const regVal = sid.read(address);
+                const nibble = (regVal >> shift) & 0x0F;
+
+                expect(nibble).toBe(expectedNibble);
+            }
+
+        });
+
+    });
 
     // describe('filter interpretation', () => {
 

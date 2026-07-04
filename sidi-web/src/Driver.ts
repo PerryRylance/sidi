@@ -1,12 +1,14 @@
 import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { PulseWidth } from "./ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain } from "./ContinuousController";
 
 export default class Driver
 {
     private bpm: number = 120;
     private pcmFrequencyHz: number = 44100;
+    private attackDecay: Uint8Array = new Uint8Array(16);
+    private sustainRelease: Uint8Array = new Uint8Array(16);
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -62,6 +64,34 @@ export default class Driver
                 this.sid.write(offset + 1, hi);
 
                 break;
+            
+            case Attack:
+            case Decay:
+            case Sustain:
+            case Release: {
+                const mapped = this.getExtrapolatedBitValue(event.value, 7, 4);
+                const regOffset = (event.controller === Attack || event.controller === Decay) ? 5 : 6;
+                const address = event.channel * 7 + regOffset;
+                
+                if (regOffset === 5) {
+                    const currentVal = this.attackDecay[event.channel];
+                    const newVal = (event.controller === Attack)
+                        ? (currentVal & 0x0F) | (mapped << 4)
+                        : (currentVal & 0xF0) | (mapped & 0x0F);
+                    
+                    this.attackDecay[event.channel] = newVal;
+                    this.sid.write(address, newVal);
+                } else {
+                    const currentVal = this.sustainRelease[event.channel];
+                    const newVal = (event.controller === Sustain)
+                        ? (currentVal & 0x0F) | (mapped << 4)
+                        : (currentVal & 0xF0) | (mapped & 0x0F);
+                    
+                    this.sustainRelease[event.channel] = newVal;
+                    this.sid.write(address, newVal);
+                }
+                break;
+            }
         }
     }
 
