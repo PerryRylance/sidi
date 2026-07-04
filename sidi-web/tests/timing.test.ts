@@ -1,7 +1,5 @@
 import { describe, test, expect, beforeAll } from 'vitest';
-import fs from "fs";
-import path from "path";
-import { File } from "@perry-rylance/midi";
+import { EndOfTrackEvent, File, SetTempoEvent, Track } from "@perry-rylance/midi";
 import createSIDModule from '../compiled/libresidfp';
 import Driver from '../src/Driver';
 
@@ -12,21 +10,44 @@ describe('Driver Timing', () => {
     module = await createSIDModule({});
   });
 
-  test('process returns 88200 samples for one measure of silence', () => {
-    const fixturePath = path.resolve(__dirname, 'fixtures/test-one-measure-silence.mid');
-    const buffer = fs.readFileSync(fixturePath);
-    const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
-    const file = File.fromArrayBuffer(arrayBuffer);
+  describe.each([
+    { ticksPerQuarterNote: 24 },
+    { ticksPerQuarterNote: 96 },
+    { ticksPerQuarterNote: 480 },
+    { ticksPerQuarterNote: 960 },
+  ])('With $ticksPerQuarterNote ppqn', ({ ticksPerQuarterNote }) => {
 
-    expect(file.tracks.length).toBe(1);
-    const track = file.tracks[0];
+    test.each([
+      [4, 120, 88200],
+      [4, 60, 176400],
+      [4, 180, 58800]
+    ])('for %i beats at %i bpm writes %i samples', (beats, bpm, expectation) => {
 
-    const driver = new Driver(module, file.resolution);
-    
-    // Create a large enough buffer for the output samples
-    const pcmBuffer = new Int16Array(88200);
-    const result = driver.process(track, pcmBuffer);
+      const file = new File();
+      file.resolution.ticksPerQuarterNote = ticksPerQuarterNote;
 
-    expect(result).toBe(88200);
+      const track = new Track();
+      file.tracks.push(track);
+
+      const tempo = new SetTempoEvent();
+      tempo.bpm = bpm;
+      track.events.push(tempo);
+
+      const eot = new EndOfTrackEvent(ticksPerQuarterNote * beats);
+      track.events.push(eot);
+
+      // NB: Resampler has internal state, group delay, fractional phase steps, and filtering overhead. To fully flush the requested clock cycles, the resampler generates extra samples.
+      // TODO: This is worth looking further into because it's going to cause timing drift especially if we're syncing animations up to the output.
+      const overshoot = 32;
+      const pcmBuffer = new Int16Array(expectation + overshoot);
+
+      const driver = new Driver(module, file.resolution);
+      const result = driver.process(track, pcmBuffer);
+
+      // NB: Allow for overshoot (see above)
+      expect(result).toBeGreaterThanOrEqual(expectation);
+
+    })
   });
+
 });

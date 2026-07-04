@@ -1,4 +1,4 @@
-import { Resolution, Track } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent } from "@perry-rylance/midi";
 import { SID, SIDModule } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 
@@ -14,14 +14,15 @@ export default class Driver
         this.sid.setSamplingParameters(this.clockFrequencyHz, module.SamplingMethod.DECIMATE, this.pcmFrequencyHz);
     }
 
-    /*private getNumSamplesFromDelta(delta: number, bpm: number)
-    {
-
-    }*/
-
     private getNumCyclesFromDelta(delta: number): number
     {
         return Math.round((delta * 60 * this.clockFrequencyHz) / (this.bpm * this.resolution.ticksPerQuarterNote));
+    }
+
+    interpret(event: Event): void
+    {
+        if(event instanceof SetTempoEvent)
+            this.bpm = event.bpm;
     }
 
     process(track: Track, buffer: Int16Array): number
@@ -33,8 +34,9 @@ export default class Driver
             // TODO: Handle large deltas (eg that would overflow buffer)
             const cycles = this.getNumCyclesFromDelta(event.delta);
             const samples = this.sid.clock(cycles, buffer);
-
             numSamplesWritten += samples;
+
+            this.interpret(event);
 
         });
 
