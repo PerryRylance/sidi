@@ -1,14 +1,15 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { Attack, Decay, PulseWidth, Release, Sustain } from "./ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise } from "./ContinuousController";
 
 export default class Driver
 {
     private bpm: number = 120;
     private pcmFrequencyHz: number = 44100;
-    private attackDecay: Uint8Array = new Uint8Array(16);
-    private sustainRelease: Uint8Array = new Uint8Array(16);
+    private attackDecay: Uint8Array = new Uint8Array(3);
+    private sustainRelease: Uint8Array = new Uint8Array(3);
+    private controlRegister: Uint8Array = new Uint8Array(3);
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -70,26 +71,40 @@ export default class Driver
             case Sustain:
             case Release: {
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 4);
-                const regOffset = (event.controller === Attack || event.controller === Decay) ? 5 : 6;
+                const config: Record<number, { array: Uint8Array, shift: number, mask: number, regOffset: number }> = {
+                    [Attack]:  { array: this.attackDecay,       shift: 4, mask: 0x0F, regOffset: 5 },
+                    [Decay]:   { array: this.attackDecay,       shift: 0, mask: 0xF0, regOffset: 5 },
+                    [Sustain]: { array: this.sustainRelease,    shift: 4, mask: 0x0F, regOffset: 6 },
+                    [Release]: { array: this.sustainRelease,    shift: 0, mask: 0xF0, regOffset: 6 },
+                };
+
+                const { array, shift, mask, regOffset } = config[event.controller];
                 const address = event.channel * 7 + regOffset;
+                const currentVal = array[event.channel];
+                const newVal = (currentVal & mask) | (mapped << shift);
                 
-                if (regOffset === 5) {
-                    const currentVal = this.attackDecay[event.channel];
-                    const newVal = (event.controller === Attack)
-                        ? (currentVal & 0x0F) | (mapped << 4)
-                        : (currentVal & 0xF0) | (mapped & 0x0F);
-                    
-                    this.attackDecay[event.channel] = newVal;
-                    this.sid.write(address, newVal);
-                } else {
-                    const currentVal = this.sustainRelease[event.channel];
-                    const newVal = (event.controller === Sustain)
-                        ? (currentVal & 0x0F) | (mapped << 4)
-                        : (currentVal & 0xF0) | (mapped & 0x0F);
-                    
-                    this.sustainRelease[event.channel] = newVal;
-                    this.sid.write(address, newVal);
-                }
+                array[event.channel] = newVal;
+                this.sid.write(address, newVal);
+                break;
+            }
+            case Tri:
+            case Saw:
+            case Pulse:
+            case Noise: {
+                const on = event.value >= 64;
+                const maskMap: Record<number, number> = {
+                    [Tri]: 0x10,
+                    [Saw]: 0x20,
+                    [Pulse]: 0x40,
+                    [Noise]: 0x80,
+                };
+                const mask = maskMap[event.controller];
+                const address = event.channel * 7 + 4;
+                const currentVal = this.controlRegister[event.channel];
+                const newVal = on ? (currentVal | mask) : (currentVal & ~mask);
+
+                this.controlRegister[event.channel] = newVal;
+                this.sid.write(address, newVal);
                 break;
             }
         }
@@ -98,7 +113,7 @@ export default class Driver
     private interpret(event: Event): void
     {
         if(event instanceof SetTempoEvent)
-            return this.interpretSetTempo(event)
+            return this.interpretSetTempo(event);
         
         if(event instanceof NoteOnEvent)
             return this.interpretNoteOn(event);

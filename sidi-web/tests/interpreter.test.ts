@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
-import { Attack, Decay, PulseWidth, Release, Sustain } from "../src/ContinuousController";
+import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri } from "../src/ContinuousController";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
     interpret: (event: Event) => void;
@@ -85,6 +85,62 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             expect(sid.read(address + 1)).toBe(hi);
 
         });
+
+    });
+
+    describe('waveform interpretation', () => {
+
+        const waveforms = [
+            { controller: Tri, mask: 0x10, name: 'tri' },
+            { controller: Saw, mask: 0x20, name: 'saw' },
+            { controller: Pulse, mask: 0x40, name: 'pulse' },
+            { controller: Noise, mask: 0x80, name: 'noise' }
+        ];
+
+        // Generate the power set (all 16 combinations) of active waveforms dynamically
+        const powerSet: Array<{ name: string; selected: typeof waveforms }> = [];
+        const totalCombinations = 1 << waveforms.length;
+
+        for (let i = 0; i < totalCombinations; i++) {
+            const selected: typeof waveforms = [];
+            const names: string[] = [];
+            for (let j = 0; j < waveforms.length; j++) {
+                if ((i & (1 << j)) !== 0) {
+                    selected.push(waveforms[j]);
+                    names.push(waveforms[j].name);
+                }
+            }
+            powerSet.push({
+                name: names.length > 0 ? names.join(' + ') : 'none',
+                selected
+            });
+        }
+
+        test.each(powerSet)(
+            'writes expected bits for combination: $name',
+            ({ selected }) => {
+                const address = channel * 7 + 4;
+                const sid = mockSID(new module.SID());
+                const driver = new Driver(sid, new Resolution());
+
+                // Calculate expected bitmask for this combination
+                let expectedMask = 0;
+                for (const w of selected) {
+                    expectedMask |= w.mask;
+                }
+
+                // Send control change events for all 4 waveforms to simulate transition to this state
+                for (const w of waveforms) {
+                    const isSelected = selected.some(s => s.controller === w.controller);
+                    const event = new ControllerEvent(0, channel);
+                    event.controller = w.controller;
+                    event.value = isSelected ? 127 : 0;
+                    (driver as unknown as DriverExposingInterpret).interpret(event);
+                }
+
+                expect(sid.read(address)).toBe(expectedMask);
+            }
+        );
 
     });
 
