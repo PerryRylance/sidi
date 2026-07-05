@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
-import { NoteOnEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
+import { NoteOnEvent, NoteOffEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
-import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri } from "../src/ContinuousController";
+import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test } from "../src/ContinuousController";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
     interpret: (event: Event) => void;
@@ -88,61 +88,70 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
     });
 
-    describe('waveform interpretation', () => {
+    function testControlRegisterBits(
+        suiteName: string,
+        bits: Array<{ controller: number; mask: number; name: string }>
+    ) {
+        describe(suiteName, () => {
+            const powerSet: Array<{ name: string; selected: typeof bits }> = [];
+            const totalCombinations = 1 << bits.length;
 
-        const waveforms = [
-            { controller: Tri, mask: 0x10, name: 'tri' },
-            { controller: Saw, mask: 0x20, name: 'saw' },
-            { controller: Pulse, mask: 0x40, name: 'pulse' },
-            { controller: Noise, mask: 0x80, name: 'noise' }
-        ];
-
-        // Generate the power set (all 16 combinations) of active waveforms dynamically
-        const powerSet: Array<{ name: string; selected: typeof waveforms }> = [];
-        const totalCombinations = 1 << waveforms.length;
-
-        for (let i = 0; i < totalCombinations; i++) {
-            const selected: typeof waveforms = [];
-            const names: string[] = [];
-            for (let j = 0; j < waveforms.length; j++) {
-                if ((i & (1 << j)) !== 0) {
-                    selected.push(waveforms[j]);
-                    names.push(waveforms[j].name);
+            for (let i = 0; i < totalCombinations; i++) {
+                const selected: typeof bits = [];
+                const names: string[] = [];
+                for (let j = 0; j < bits.length; j++) {
+                    if ((i & (1 << j)) !== 0) {
+                        selected.push(bits[j]);
+                        names.push(bits[j].name);
+                    }
                 }
+                powerSet.push({
+                    name: names.length > 0 ? names.join(' + ') : 'none',
+                    selected
+                });
             }
-            powerSet.push({
-                name: names.length > 0 ? names.join(' + ') : 'none',
-                selected
-            });
-        }
 
-        test.each(powerSet)(
-            'writes expected bits for combination: $name',
-            ({ selected }) => {
-                const address = channel * 7 + 4;
-                const sid = mockSID(new module.SID());
-                const driver = new Driver(sid, new Resolution());
+            test.each(powerSet)(
+                'writes expected bits for combination: $name',
+                ({ selected }) => {
+                    const address = channel * 7 + 4;
+                    const sid = mockSID(new module.SID());
+                    const driver = new Driver(sid, new Resolution());
 
-                // Calculate expected bitmask for this combination
-                let expectedMask = 0;
-                for (const w of selected) {
-                    expectedMask |= w.mask;
+                    // Calculate expected bitmask for this combination
+                    let expectedMask = 0;
+                    for (const b of selected) {
+                        expectedMask |= b.mask;
+                    }
+
+                    // Send control change events for all controls to simulate transition to this state
+                    for (const b of bits) {
+                        const isSelected = selected.some(s => s.controller === b.controller);
+                        const event = new ControllerEvent(0, channel);
+                        event.controller = b.controller;
+                        event.value = isSelected ? 127 : 0;
+                        (driver as unknown as DriverExposingInterpret).interpret(event);
+                    }
+
+                    expect(sid.read(address)).toBe(expectedMask);
                 }
+            );
+        });
+    }
 
-                // Send control change events for all 4 waveforms to simulate transition to this state
-                for (const w of waveforms) {
-                    const isSelected = selected.some(s => s.controller === w.controller);
-                    const event = new ControllerEvent(0, channel);
-                    event.controller = w.controller;
-                    event.value = isSelected ? 127 : 0;
-                    (driver as unknown as DriverExposingInterpret).interpret(event);
-                }
+    testControlRegisterBits('waveform interpretation', [
+        { controller: Tri, mask: 0x10, name: 'tri' },
+        { controller: Saw, mask: 0x20, name: 'saw' },
+        { controller: Pulse, mask: 0x40, name: 'pulse' },
+        { controller: Noise, mask: 0x80, name: 'noise' }
+    ]);
 
-                expect(sid.read(address)).toBe(expectedMask);
-            }
-        );
-
-    });
+    testControlRegisterBits('control interpretation', [
+        { controller: Gate, mask: 0x01, name: 'gate' },
+        { controller: Sync, mask: 0x02, name: 'sync' },
+        { controller: Ring, mask: 0x04, name: 'ring' },
+        { controller: Test, mask: 0x08, name: 'test' }
+    ]);
 
     describe('adsr envelope interpretation', () => {
 
@@ -176,6 +185,92 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                 expect(nibble).toBe(expectedNibble);
             }
 
+        });
+
+    });
+
+    describe('note control interpretation', () => {
+
+        test('interpreting a note on turns the GATE bit ON', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            const noteOn = new NoteOnEvent(0, channel);
+            noteOn.key = 60;
+
+            (driver as unknown as DriverExposingInterpret).interpret(noteOn);
+
+            const address = channel * 7 + 4;
+            expect(sid.read(address) & 0x01).toBe(0x01);
+        });
+
+        test('interpreting a note on followed by a note off on the same pitch turns the GATE bit OFF', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            const noteOn = new NoteOnEvent(0, channel);
+            noteOn.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOn);
+
+            const noteOff = new NoteOffEvent(0, channel);
+            noteOff.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOff);
+
+            const address = channel * 7 + 4;
+            expect(sid.read(address) & 0x01).toBe(0x00);
+        });
+
+        test('interpreting a note on, followed by a note on on a different key, followed by a note off on the original key, keeps the GATE bit ON', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            // Press Note A
+            const noteOnA = new NoteOnEvent(0, channel);
+            noteOnA.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOnA);
+
+            // Press Note B (making B the last pressed note)
+            const noteOnB = new NoteOnEvent(0, channel);
+            noteOnB.key = 64;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOnB);
+
+            // Release Note A (not the last pressed note)
+            const noteOffA = new NoteOffEvent(0, channel);
+            noteOffA.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOffA);
+
+            const address = channel * 7 + 4;
+            expect(sid.read(address) & 0x01).toBe(0x01); // Gate should still be ON
+        });
+
+        test('interpreting a note on, followed by a note on on a different key, followed by a note off on the original key, and then a note off on the last note on key, sets the GATE bit OFF', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            // Press Note A
+            const noteOnA = new NoteOnEvent(0, channel);
+            noteOnA.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOnA);
+
+            // Press Note B (making B the last pressed note)
+            const noteOnB = new NoteOnEvent(0, channel);
+            noteOnB.key = 64;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOnB);
+
+            // Release Note A (not the last pressed note)
+            const noteOffA = new NoteOffEvent(0, channel);
+            noteOffA.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOffA);
+
+            const address = channel * 7 + 4;
+            expect(sid.read(address) & 0x01).toBe(0x01); // Gate should still be ON
+
+            // Release Note B (the last pressed note)
+            const noteOffB = new NoteOffEvent(0, channel);
+            noteOffB.key = 64;
+            (driver as unknown as DriverExposingInterpret).interpret(noteOffB);
+
+            expect(sid.read(address) & 0x01).toBe(0x00); // Gate should now be OFF
         });
 
     });

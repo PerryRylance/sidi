@@ -1,7 +1,7 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise } from "./ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test } from "./ContinuousController";
 
 export default class Driver
 {
@@ -10,6 +10,7 @@ export default class Driver
     private attackDecay: Uint8Array = new Uint8Array(3);
     private sustainRelease: Uint8Array = new Uint8Array(3);
     private controlRegister: Uint8Array = new Uint8Array(3);
+    private lastPressedKey: Array<number | null> = [null, null, null];
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -48,11 +49,26 @@ export default class Driver
         
         this.sid.write(offset + 0, lo);
         this.sid.write(offset + 1, hi);
+
+        this.lastPressedKey[event.channel] = event.key;
+        this.controlRegister[event.channel] |= 0x01;
+        this.sid.write(offset + 4, this.controlRegister[event.channel]);
+    }
+
+    private interpretNoteOff(event: NoteOffEvent): void
+    {
+        if (this.lastPressedKey[event.channel] === event.key)
+        {
+            const offset = event.channel * 7;
+            this.controlRegister[event.channel] &= ~0x01;
+            this.sid.write(offset + 4, this.controlRegister[event.channel]);
+            this.lastPressedKey[event.channel] = null;
+        }
     }
 
     private interpretController(event: ControllerEvent): void
     {
-        switch(event.controller)
+        switch(event.controller as number)
         {
             case PulseWidth:
                 // NB: Pulse width modulation
@@ -90,11 +106,19 @@ export default class Driver
             case Tri:
             case Saw:
             case Pulse:
-            case Noise: {
+            case Noise:
+            case Gate:
+            case Sync:
+            case Ring:
+            case Test: {
                 const on = event.value >= 64;
                 const maskMap: Record<number, number> = {
-                    [Tri]: 0x10,
-                    [Saw]: 0x20,
+                    [Gate]:  0x01,
+                    [Sync]:  0x02,
+                    [Ring]:  0x04,
+                    [Test]:  0x08,
+                    [Tri]:   0x10,
+                    [Saw]:   0x20,
                     [Pulse]: 0x40,
                     [Noise]: 0x80,
                 };
@@ -112,14 +136,17 @@ export default class Driver
 
     private interpret(event: Event): void
     {
-        if(event instanceof SetTempoEvent)
-            return this.interpretSetTempo(event);
+        if(event instanceof ControllerEvent)
+            return this.interpretController(event);
         
         if(event instanceof NoteOnEvent)
             return this.interpretNoteOn(event);
         
-        if(event instanceof ControllerEvent)
-            return this.interpretController(event);
+        if(event instanceof NoteOffEvent)
+            return this.interpretNoteOff(event);
+
+        if(event instanceof SetTempoEvent)
+            return this.interpretSetTempo(event);
     }
 
     process(track: Track, buffer: Int16Array): number
