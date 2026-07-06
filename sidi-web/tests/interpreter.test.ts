@@ -534,6 +534,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
             // 1. Send FilterLowPass (set to 127, enables LP, bit 0x10)
             const lpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             lpEvent.controller = FilterLowPass;
             lpEvent.value = 127;
             (driver as unknown as DriverExposingInterpret).interpret(lpEvent);
@@ -552,6 +553,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
             // 3. Clear FilterLowPass
             const disableLpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             disableLpEvent.controller = FilterLowPass;
             disableLpEvent.value = 0;
             (driver as unknown as DriverExposingInterpret).interpret(disableLpEvent);
