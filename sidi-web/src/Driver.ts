@@ -1,4 +1,4 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
+import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "./ContinuousController";
@@ -13,6 +13,11 @@ export default class Driver
     private lastPressedKey: Array<number | null> = [null, null, null];
     private filterResonanceSelect: number = 0;
     private filterModeVolumeSelect: number = 0;
+
+    private rpnMsb: Uint8Array = new Uint8Array([127, 127, 127]);
+    private rpnLsb: Uint8Array = new Uint8Array([127, 127, 127]);
+    private maxBendSemitones: Uint8Array = new Uint8Array([2, 2, 2]);
+    private pitchBendAmount: Float32Array = new Float32Array(3);
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -39,22 +44,41 @@ export default class Driver
         this.bpm = event.bpm;
     }
 
-    private interpretNoteOn(event: NoteOnEvent): void
+    private updateFrequency(channel: number): void
     {
-        const frequencyHz = 440 * Math.pow(2, (event.key - 69) / 12);
+        const key = this.lastPressedKey[channel];
+        if (key === null) return;
+
+        const bendAmount = this.pitchBendAmount[channel];
+        const bendRange = this.maxBendSemitones[channel];
+        const bentKey = key + (bendAmount * bendRange);
+
+        const frequencyHz = 440 * Math.pow(2, (bentKey - 69) / 12);
         const regValue = Math.round((frequencyHz * 16777216) / this.clockFrequencyHz);
         const clamped = Math.max(0, Math.min(65535, regValue));
-        
-        const offset = event.channel * 7;
+
+        const offset = channel * 7;
         const lo = clamped & 0xFF;
         const hi = (clamped >> 8) & 0xFF;
-        
+
         this.sid.write(offset + 0, lo);
         this.sid.write(offset + 1, hi);
+    }
 
+    private interpretNoteOn(event: NoteOnEvent): void
+    {
         this.lastPressedKey[event.channel] = event.key;
+        this.updateFrequency(event.channel);
+
+        const offset = event.channel * 7;
         this.controlRegister[event.channel] |= 0x01;
         this.sid.write(offset + 4, this.controlRegister[event.channel]);
+    }
+
+    private interpretPitchWheel(event: PitchWheelEvent): void
+    {
+        this.pitchBendAmount[event.channel] = event.amount;
+        this.updateFrequency(event.channel);
     }
 
     private interpretNoteOff(event: NoteOffEvent): void
@@ -186,6 +210,19 @@ export default class Driver
                 this.sid.write(address, newVal);
                 break;
             }
+            case 101: // RPN MSB Selection
+                this.rpnMsb[event.channel] = event.value;
+                break;
+
+            case 100: // RPN LSB Selection
+                this.rpnLsb[event.channel] = event.value;
+                break;
+
+            case 6: // Data Entry MSB (Sets the value of the selected RPN)
+                if (this.rpnMsb[event.channel] === 0 && this.rpnLsb[event.channel] === 0) {
+                    this.maxBendSemitones[event.channel] = event.value;
+                }
+                break;
         }
     }
 
@@ -202,6 +239,9 @@ export default class Driver
 
         if(event instanceof SetTempoEvent)
             return this.interpretSetTempo(event);
+
+        if(event instanceof PitchWheelEvent)
+            return this.interpretPitchWheel(event);
     }
 
     process(track: Track, buffer: Int16Array): number

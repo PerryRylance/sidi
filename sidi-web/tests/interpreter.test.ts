@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
-import { NoteOnEvent, NoteOffEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
+import { NoteOnEvent, NoteOffEvent, Resolution, Event, ControllerEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
 import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "../src/ContinuousController";
 
@@ -559,6 +559,185 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // Verify Volume is preserved, and LP is cleared (0x0F)
             expect(sid.read(address)).toBe(0x0F);
 
+        });
+
+    });
+
+    describe('pitch bend and RPN range interpretation', () => {
+
+        const testCases = [
+            // [noteName, key, defaultUpLo, defaultUpHi, defaultDownLo, defaultDownHi, rpnUpLo, rpnUpHi, rpnDownLo, rpnDownHi]
+            ["C1", 24, 0x71, 0x02, 0xF0, 0x01, 0x5A, 0x04, 0x16, 0x01],
+            ["C2", 36, 0xE2, 0x04, 0xE0, 0x03, 0xB4, 0x08, 0x2D, 0x02],
+            ["C3", 48, 0xC4, 0x09, 0xC1, 0x07, 0x67, 0x11, 0x5A, 0x04],
+            ["C4", 60, 0x89, 0x13, 0x81, 0x0F, 0xCE, 0x22, 0xB4, 0x08],
+            ["C5", 72, 0x11, 0x27, 0x02, 0x1F, 0x9C, 0x45, 0x67, 0x11],
+            ["C6", 84, 0x23, 0x4E, 0x04, 0x3E, 0x39, 0x8B, 0xCF, 0x22]
+        ] as const;
+
+        test.each(testCases)('with base note %s: default +/- 2 semitone bends write correct bytes', (noteName, key, upLo, upHi, downLo, downHi) => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = channel * 7;
+
+            // 1. Play note
+            const noteEvent = new NoteOnEvent(0, channel);
+            noteEvent.key = key;
+            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+
+            // 2. Apply full pitch bend up (amount = 1.0)
+            const upEvent = new PitchWheelEvent(0, channel);
+            upEvent.amount = 1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(upEvent);
+
+            expect(sid.read(address)).toBe(upLo);
+            expect(sid.read(address + 1)).toBe(upHi);
+
+            // 3. Apply full pitch bend down (amount = -1.0)
+            const downEvent = new PitchWheelEvent(0, channel);
+            downEvent.amount = -1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(downEvent);
+
+            expect(sid.read(address)).toBe(downLo);
+            expect(sid.read(address + 1)).toBe(downHi);
+        });
+
+        test.each(testCases)('with base note %s: RPN-configured +/- 12 semitone bends write correct bytes', (noteName, key, _upLo, _upHi, _downLo, _downHi, rpnUpLo, rpnUpHi, rpnDownLo, rpnDownHi) => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = channel * 7;
+
+            // 1. Select RPN 00 00 (Pitch Bend Sensitivity)
+            const msbEvent = new ControllerEvent(0, channel);
+            msbEvent.controller = 101;
+            msbEvent.value = 0;
+            (driver as unknown as DriverExposingInterpret).interpret(msbEvent);
+
+            const lsbEvent = new ControllerEvent(0, channel);
+            lsbEvent.controller = 100;
+            lsbEvent.value = 0;
+            (driver as unknown as DriverExposingInterpret).interpret(lsbEvent);
+
+            // 2. Set range to 12 semitones using Data Entry MSB (CC 6)
+            const dataEvent = new ControllerEvent(0, channel);
+            dataEvent.controller = 6;
+            dataEvent.value = 12;
+            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+
+            // 3. Play note
+            const noteEvent = new NoteOnEvent(0, channel);
+            noteEvent.key = key;
+            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+
+            // 4. Apply full pitch bend up (amount = 1.0)
+            const upEvent = new PitchWheelEvent(0, channel);
+            upEvent.amount = 1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(upEvent);
+
+            expect(sid.read(address)).toBe(rpnUpLo);
+            expect(sid.read(address + 1)).toBe(rpnUpHi);
+
+            // 5. Apply full pitch bend down (amount = -1.0)
+            const downEvent = new PitchWheelEvent(0, channel);
+            downEvent.amount = -1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(downEvent);
+
+            expect(sid.read(address)).toBe(rpnDownLo);
+            expect(sid.read(address + 1)).toBe(rpnDownHi);
+        });
+
+        test('data entry MSB without RPN selection does not alter default bend range', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = channel * 7;
+
+            // 1. Play C4
+            const noteEvent = new NoteOnEvent(0, channel);
+            noteEvent.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+
+            // 2. Send Data Entry MSB (CC 6) with value 12 without selecting RPN
+            const dataEvent = new ControllerEvent(0, channel);
+            dataEvent.controller = 6;
+            dataEvent.value = 12;
+            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+
+            // 3. Apply full up bend
+            const bendEvent = new PitchWheelEvent(0, channel);
+            bendEvent.amount = 1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+
+            // Should still only bend 2 semitones to D4 (0x1389)
+            expect(sid.read(address)).toBe(0x89);
+            expect(sid.read(address + 1)).toBe(0x13);
+        });
+
+        test('data entry MSB under non-zero RPN does not alter pitch bend range', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = channel * 7;
+
+            // 1. Play C4
+            const noteEvent = new NoteOnEvent(0, channel);
+            noteEvent.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+
+            // 2. Select a different RPN (e.g., RPN 00 01 - Fine Tuning)
+            const msbEvent = new ControllerEvent(0, channel);
+            msbEvent.controller = 101;
+            msbEvent.value = 0;
+            (driver as unknown as DriverExposingInterpret).interpret(msbEvent);
+
+            const lsbEvent = new ControllerEvent(0, channel);
+            lsbEvent.controller = 100;
+            lsbEvent.value = 1; // Non-zero RPN
+            (driver as unknown as DriverExposingInterpret).interpret(lsbEvent);
+
+            // 3. Send Data Entry MSB (CC 6) with value 12
+            const dataEvent = new ControllerEvent(0, channel);
+            dataEvent.controller = 6;
+            dataEvent.value = 12;
+            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+
+            // 4. Apply full up bend
+            const bendEvent = new PitchWheelEvent(0, channel);
+            bendEvent.amount = 1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+
+            // Should still only bend 2 semitones to D4 (0x1389)
+            expect(sid.read(address)).toBe(0x89);
+            expect(sid.read(address + 1)).toBe(0x13);
+        });
+
+        test('pitch bend on a channel does not affect another channel', () => {
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            
+            const otherChannel = (channel + 1) % 3;
+            const addressChan = channel * 7;
+            const addressOther = otherChannel * 7;
+
+            // Play C4 on both channels
+            const note1 = new NoteOnEvent(0, channel);
+            note1.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(note1);
+
+            const note2 = new NoteOnEvent(0, otherChannel);
+            note2.key = 60;
+            (driver as unknown as DriverExposingInterpret).interpret(note2);
+
+            // Apply full pitch bend to our channel
+            const bendEvent = new PitchWheelEvent(0, channel);
+            bendEvent.amount = 1.0;
+            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+
+            // Our channel should be bent up to D4 (0x1389)
+            expect(sid.read(addressChan)).toBe(0x89);
+            expect(sid.read(addressChan + 1)).toBe(0x13);
+
+            // Other channel should remain unbent C4 (0x1167)
+            expect(sid.read(addressOther)).toBe(0x67);
+            expect(sid.read(addressOther + 1)).toBe(0x11);
         });
 
     });
