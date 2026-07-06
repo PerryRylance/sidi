@@ -14,3 +14,7 @@ export const Gate = 84;
 export const Sync = 85;
 export const Ring = 86;
 export const Test = 87;
+
+export const FilterCutoff = 74;
+export const FilterResonance = 71;
+export const FilterEnable = 88;

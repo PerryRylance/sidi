@@ -1,7 +1,7 @@
 import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test } from "./ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable } from "./ContinuousController";
 
 export default class Driver
 {
@@ -11,6 +11,7 @@ export default class Driver
     private sustainRelease: Uint8Array = new Uint8Array(3);
     private controlRegister: Uint8Array = new Uint8Array(3);
     private lastPressedKey: Array<number | null> = [null, null, null];
+    private filterResonanceSelect: number = 0;
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -70,6 +71,33 @@ export default class Driver
     {
         switch(event.controller as number)
         {
+            case FilterCutoff: {
+                const mapped = this.getExtrapolatedBitValue(event.value, 7, 11);
+                const lo = mapped & 0x07;
+                const hi = (mapped >> 3) & 0xFF;
+
+                this.sid.write(0x15, lo);
+                this.sid.write(0x16, hi);
+                break;
+            }
+
+            case FilterResonance: {
+                const mapped = this.getExtrapolatedBitValue(event.value, 7, 4);
+                this.filterResonanceSelect = (this.filterResonanceSelect & 0x0F) | (mapped << 4);
+                this.sid.write(0x17, this.filterResonanceSelect);
+                break;
+            }
+
+            case FilterEnable: {
+                const on = event.value >= 64;
+                const mask = 1 << event.channel;
+                this.filterResonanceSelect = on 
+                    ? (this.filterResonanceSelect | mask) 
+                    : (this.filterResonanceSelect & ~mask);
+                this.sid.write(0x17, this.filterResonanceSelect);
+                break;
+            }
+
             case PulseWidth:
                 // NB: Pulse width modulation
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 12);
