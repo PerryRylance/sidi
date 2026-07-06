@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, NoteOffEvent, Resolution, Event, ControllerEvent } from "@perry-rylance/midi";
 import Driver from "../src/Driver";
-import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable } from "../src/ContinuousController";
+import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "../src/ContinuousController";
 
 type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
     interpret: (event: Event) => void;
@@ -382,10 +382,185 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         });
 
+        function testFilterModeBits(
+            suiteName: string,
+            bits: Array<{ controller: number; mask: number; name: string }>
+        ) {
+            describe(suiteName, () => {
+                const powerSet: Array<{ name: string; selected: typeof bits }> = [];
+                const totalCombinations = 1 << bits.length;
+
+                for (let i = 0; i < totalCombinations; i++) {
+                    const selected: typeof bits = [];
+                    const names: string[] = [];
+                    for (let j = 0; j < bits.length; j++) {
+                        if ((i & (1 << j)) !== 0) {
+                            selected.push(bits[j]);
+                            names.push(bits[j].name);
+                        }
+                    }
+                    powerSet.push({
+                        name: names.length > 0 ? names.join(' + ') : 'none',
+                        selected
+                    });
+                }
+
+                test.each(powerSet)(
+                    'writes expected bits for combination: $name',
+                    ({ selected }) => {
+                        const address = 0x18;
+                        const sid = mockSID(new module.SID());
+                        const driver = new Driver(sid, new Resolution());
+
+                        let expectedMask = 0;
+                        for (const b of selected) {
+                            expectedMask |= b.mask;
+                        }
+
+                        for (const b of bits) {
+                            const isSelected = selected.some(s => s.controller === b.controller);
+                            const event = new ControllerEvent(0, channel);
+                            event.controller = b.controller;
+                            event.value = isSelected ? 127 : 0;
+                            (driver as unknown as DriverExposingInterpret).interpret(event);
+                        }
+
+                        expect(sid.read(address)).toBe(expectedMask);
+                    }
+                );
+            });
+        }
+
+        testFilterModeBits('filter mode interpretation', [
+            { controller: FilterLowPass, mask: 0x10, name: 'lp' },
+            { controller: FilterBandPass, mask: 0x20, name: 'bp' },
+            { controller: FilterHighPass, mask: 0x40, name: 'hp' }
+        ]);
+
+        test('interpreting a Oscillator3Mute cc with value 127 sets the mute bit for oscillator 3, and value 0 clears it', () => {
+
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = 0x18;
+
+            // Turn ON (Mute active)
+            const muteEvent = new ControllerEvent(0, channel);
+            muteEvent.controller = Oscillator3Mute;
+            muteEvent.value = 127;
+
+            (driver as unknown as DriverExposingInterpret).interpret(muteEvent);
+
+            expect(sid.read(address) & 0x80).toBe(0x80);
+
+            // Turn OFF (Mute inactive)
+            const unmuteEvent = new ControllerEvent(0, channel);
+            unmuteEvent.controller = Oscillator3Mute;
+            unmuteEvent.value = 0;
+
+            (driver as unknown as DriverExposingInterpret).interpret(unmuteEvent);
+
+            expect(sid.read(address) & 0x80).toBe(0x00);
+
+        });
+
+        test('oscillator 3 mute and filter mode controls preserve other bits in register $18', () => {
+
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = 0x18;
+
+            // 1. Send FilterLowPass (set to 127, enables LP, bit 0x10)
+            const lpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
+            lpEvent.controller = FilterLowPass;
+            lpEvent.value = 127;
+            (driver as unknown as DriverExposingInterpret).interpret(lpEvent);
+
+            // Verify LP bit is set (0x10)
+            expect(sid.read(address)).toBe(0x10);
+
+            // 2. Send Oscillator3Mute (set to 127, enables Mute, bit 0x80)
+            const muteEvent = new ControllerEvent(0, channel);
+            muteEvent.controller = Oscillator3Mute;
+            muteEvent.value = 127;
+            (driver as unknown as DriverExposingInterpret).interpret(muteEvent);
+
+            // Verify LP bit is preserved, and Mute bit is added (0x10 | 0x80 = 0x90)
+            expect(sid.read(address)).toBe(0x10 | 0x80);
+
+            // 3. Disable FilterLowPass
+            const disableLpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
+            disableLpEvent.controller = FilterLowPass;
+            disableLpEvent.value = 0;
+            (driver as unknown as DriverExposingInterpret).interpret(disableLpEvent);
+
+            // Verify Mute bit is preserved, and LP bit is removed (0x80)
+            expect(sid.read(address)).toBe(0x80);
+
+        });
+
     });
 
-    // describe('volume interpretation', () => {
+    describe('volume interpretation', () => {
 
-    // });
+        test.each([
+            [0, 0x0],
+            [64, 0x8],
+            [127, 0xF]
+        ])(`for midi cc ${MainVolume} value %i writes expected 4-bit volume level to register`, (value, expectedVolume) => {
+
+            const event = new ControllerEvent(0, channel);
+            event.controller = MainVolume;
+            event.value = value;
+
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+
+            (driver as unknown as DriverExposingInterpret).interpret(event);
+
+            const regVal = sid.read(0x18);
+            const volumeBits = regVal & 0x0F;
+
+            expect(volumeBits).toBe(expectedVolume);
+
+        });
+
+        test('volume controls preserve other bits in register $18', () => {
+
+            const sid = mockSID(new module.SID());
+            const driver = new Driver(sid, new Resolution());
+            const address = 0x18;
+
+            // 1. Send FilterLowPass (set to 127, enables LP, bit 0x10)
+            const lpEvent = new ControllerEvent(0, channel);
+            lpEvent.controller = FilterLowPass;
+            lpEvent.value = 127;
+            (driver as unknown as DriverExposingInterpret).interpret(lpEvent);
+
+            // Verify LP bit is set (0x10)
+            expect(sid.read(address)).toBe(0x10);
+
+            // 2. Send MainVolume (set to 127, value 0xF)
+            const volEvent = new ControllerEvent(0, channel);
+            volEvent.controller = MainVolume;
+            volEvent.value = 127;
+            (driver as unknown as DriverExposingInterpret).interpret(volEvent);
+
+            // Verify LP is preserved, and Volume is set (0x10 | 0x0F = 0x1F)
+            expect(sid.read(address)).toBe(0x10 | 0x0F);
+
+            // 3. Clear FilterLowPass
+            const disableLpEvent = new ControllerEvent(0, channel);
+            disableLpEvent.controller = FilterLowPass;
+            disableLpEvent.value = 0;
+            (driver as unknown as DriverExposingInterpret).interpret(disableLpEvent);
+
+            // Verify Volume is preserved, and LP is cleared (0x0F)
+            expect(sid.read(address)).toBe(0x0F);
+
+        });
+
+    });
 
 });

@@ -1,7 +1,7 @@
 import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable } from "./ContinuousController";
+import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "./ContinuousController";
 
 export default class Driver
 {
@@ -12,6 +12,7 @@ export default class Driver
     private controlRegister: Uint8Array = new Uint8Array(3);
     private lastPressedKey: Array<number | null> = [null, null, null];
     private filterResonanceSelect: number = 0;
+    private filterModeVolumeSelect: number = 0;
 
     constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
     {
@@ -95,6 +96,32 @@ export default class Driver
                     ? (this.filterResonanceSelect | mask) 
                     : (this.filterResonanceSelect & ~mask);
                 this.sid.write(0x17, this.filterResonanceSelect);
+                break;
+            }
+
+            case FilterLowPass:
+            case FilterBandPass:
+            case FilterHighPass:
+            case Oscillator3Mute: {
+                const on = event.value >= 64;
+                const maskMap: Record<number, number> = {
+                    [FilterLowPass]:  0x10,
+                    [FilterBandPass]: 0x20,
+                    [FilterHighPass]: 0x40,
+                    [Oscillator3Mute]: 0x80,
+                };
+                const mask = maskMap[event.controller];
+                this.filterModeVolumeSelect = on
+                    ? (this.filterModeVolumeSelect | mask)
+                    : (this.filterModeVolumeSelect & ~mask);
+                this.sid.write(0x18, this.filterModeVolumeSelect);
+                break;
+            }
+
+            case MainVolume: {
+                const mapped = this.getExtrapolatedBitValue(event.value, 7, 4);
+                this.filterModeVolumeSelect = (this.filterModeVolumeSelect & 0xF0) | mapped;
+                this.sid.write(0x18, this.filterModeVolumeSelect);
                 break;
             }
 

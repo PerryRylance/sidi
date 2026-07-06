@@ -18,3 +18,11 @@ export const Test = 87;
 export const FilterCutoff = 74;
 export const FilterResonance = 71;
 export const FilterEnable = 88;
+
+export const FilterLowPass = 89;
+export const FilterBandPass = 90;
+export const FilterHighPass = 91;
+
+export const Oscillator3Mute = 92;
+
+export const MainVolume = 7;
