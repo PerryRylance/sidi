@@ -1,12 +1,8 @@
 import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
-import { NoteOnEvent, NoteOffEvent, Resolution, Event, ControllerEvent, PitchWheelEvent } from "@perry-rylance/midi";
-import Driver from "../src/Driver";
+import { NoteOnEvent, NoteOffEvent, ControllerEvent, PitchWheelEvent } from "@perry-rylance/midi";
+import MidiInterpreter from "../src/MidiInterpreter";
 import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "../src/ContinuousController";
-
-type DriverExposingInterpret = Omit<Driver, 'interpret'> & {
-    interpret: (event: Event) => void;
-};
 
 function mockSID(sid: any) {
     const writtenRegisters = new Map<number, number>();
@@ -48,9 +44,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             event.key = pitch;
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
-            (driver as unknown as DriverExposingInterpret).interpret(event);
+            interpreter.process(event);
 
             // TODO: Presently only PAL, test for NTSC too
             const address = channel * 7;
@@ -75,9 +71,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             event.value = width;
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
-            (driver as unknown as DriverExposingInterpret).interpret(event);
+            interpreter.process(event);
 
             const address = channel * 7 + 2;
 
@@ -116,7 +112,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                 ({ selected }) => {
                     const address = channel * 7 + 4;
                     const sid = mockSID(new module.SID());
-                    const driver = new Driver(sid, new Resolution());
+                    const interpreter = new MidiInterpreter(sid);
 
                     // Calculate expected bitmask for this combination
                     let expectedMask = 0;
@@ -130,7 +126,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                         const event = new ControllerEvent(0, channel);
                         event.controller = b.controller;
                         event.value = isSelected ? 127 : 0;
-                        (driver as unknown as DriverExposingInterpret).interpret(event);
+                        interpreter.process(event);
                     }
 
                     expect(sid.read(address)).toBe(expectedMask);
@@ -174,9 +170,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                 event.value = ccValue;
 
                 const sid = mockSID(new module.SID());
-                const driver = new Driver(sid, new Resolution());
+                const interpreter = new MidiInterpreter(sid);
 
-                (driver as unknown as DriverExposingInterpret).interpret(event);
+                interpreter.process(event);
 
                 const address = channel * 7 + offset;
                 const regVal = sid.read(address);
@@ -193,12 +189,12 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('interpreting a note on turns the GATE bit ON', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
             const noteOn = new NoteOnEvent(0, channel);
             noteOn.key = 60;
 
-            (driver as unknown as DriverExposingInterpret).interpret(noteOn);
+            interpreter.process(noteOn);
 
             const address = channel * 7 + 4;
             expect(sid.read(address) & 0x01).toBe(0x01);
@@ -206,15 +202,15 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('interpreting a note on followed by a note off on the same pitch turns the GATE bit OFF', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
             const noteOn = new NoteOnEvent(0, channel);
             noteOn.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOn);
+            interpreter.process(noteOn);
 
             const noteOff = new NoteOffEvent(0, channel);
             noteOff.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOff);
+            interpreter.process(noteOff);
 
             const address = channel * 7 + 4;
             expect(sid.read(address) & 0x01).toBe(0x00);
@@ -222,22 +218,22 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('interpreting a note on, followed by a note on on a different key, followed by a note off on the original key, keeps the GATE bit ON', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
             // Press Note A
             const noteOnA = new NoteOnEvent(0, channel);
             noteOnA.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOnA);
+            interpreter.process(noteOnA);
 
             // Press Note B (making B the last pressed note)
             const noteOnB = new NoteOnEvent(0, channel);
             noteOnB.key = 64;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOnB);
+            interpreter.process(noteOnB);
 
             // Release Note A (not the last pressed note)
             const noteOffA = new NoteOffEvent(0, channel);
             noteOffA.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOffA);
+            interpreter.process(noteOffA);
 
             const address = channel * 7 + 4;
             expect(sid.read(address) & 0x01).toBe(0x01); // Gate should still be ON
@@ -245,22 +241,22 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('interpreting a note on, followed by a note on on a different key, followed by a note off on the original key, and then a note off on the last note on key, sets the GATE bit OFF', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
             // Press Note A
             const noteOnA = new NoteOnEvent(0, channel);
             noteOnA.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOnA);
+            interpreter.process(noteOnA);
 
             // Press Note B (making B the last pressed note)
             const noteOnB = new NoteOnEvent(0, channel);
             noteOnB.key = 64;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOnB);
+            interpreter.process(noteOnB);
 
             // Release Note A (not the last pressed note)
             const noteOffA = new NoteOffEvent(0, channel);
             noteOffA.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOffA);
+            interpreter.process(noteOffA);
 
             const address = channel * 7 + 4;
             expect(sid.read(address) & 0x01).toBe(0x01); // Gate should still be ON
@@ -268,7 +264,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // Release Note B (the last pressed note)
             const noteOffB = new NoteOffEvent(0, channel);
             noteOffB.key = 64;
-            (driver as unknown as DriverExposingInterpret).interpret(noteOffB);
+            interpreter.process(noteOffB);
 
             expect(sid.read(address) & 0x01).toBe(0x00); // Gate should now be OFF
         });
@@ -288,9 +284,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             event.value = value;
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
-            (driver as unknown as DriverExposingInterpret).interpret(event);
+            interpreter.process(event);
 
             expect(sid.read(0x15)).toBe(lo);
             expect(sid.read(0x16)).toBe(hi);
@@ -308,9 +304,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             event.value = value;
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
-            (driver as unknown as DriverExposingInterpret).interpret(event);
+            interpreter.process(event);
 
             const regVal = sid.read(0x17);
             const nibble = (regVal >> 4) & 0x0F;
@@ -322,7 +318,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
         test('interpreting a FilterEnable cc with value 127 enables the filter for the current channel, and value 0 disables it', () => {
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = 0x17;
 
             // Turn ON
@@ -330,7 +326,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             enableEvent.controller = FilterEnable;
             enableEvent.value = 127;
 
-            (driver as unknown as DriverExposingInterpret).interpret(enableEvent);
+            interpreter.process(enableEvent);
 
             const expectedBit = 1 << channel;
             expect(sid.read(address) & expectedBit).toBe(expectedBit);
@@ -340,7 +336,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             disableEvent.controller = FilterEnable;
             disableEvent.value = 0;
 
-            (driver as unknown as DriverExposingInterpret).interpret(disableEvent);
+            interpreter.process(disableEvent);
 
             expect(sid.read(address) & expectedBit).toBe(0x00);
 
@@ -349,14 +345,14 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
         test('filter controls preserve other bits in register $17', () => {
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = 0x17;
 
             // 1. Send resonance event (set to max, value 127 which scales to 0xF)
             const resEvent = new ControllerEvent(0, channel);
             resEvent.controller = FilterResonance;
             resEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(resEvent);
+            interpreter.process(resEvent);
 
             // Verify resonance is 0xF0, and routing bits are still 0
             expect(sid.read(address)).toBe(0xF0);
@@ -365,7 +361,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             const enableEvent = new ControllerEvent(0, channel);
             enableEvent.controller = FilterEnable;
             enableEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(enableEvent);
+            interpreter.process(enableEvent);
 
             // Verify resonance bits are preserved, and routing bit is added
             const expectedBit = 1 << channel;
@@ -375,7 +371,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             const disableEvent = new ControllerEvent(0, channel);
             disableEvent.controller = FilterEnable;
             disableEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(disableEvent);
+            interpreter.process(disableEvent);
 
             // Verify resonance is still preserved, routing bit is removed
             expect(sid.read(address)).toBe(0xF0);
@@ -410,7 +406,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                     ({ selected }) => {
                         const address = 0x18;
                         const sid = mockSID(new module.SID());
-                        const driver = new Driver(sid, new Resolution());
+                        const interpreter = new MidiInterpreter(sid);
 
                         let expectedMask = 0;
                         for (const b of selected) {
@@ -422,7 +418,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                             const event = new ControllerEvent(0, channel);
                             event.controller = b.controller;
                             event.value = isSelected ? 127 : 0;
-                            (driver as unknown as DriverExposingInterpret).interpret(event);
+                            interpreter.process(event);
                         }
 
                         expect(sid.read(address)).toBe(expectedMask);
@@ -440,7 +436,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
         test('interpreting a Oscillator3Mute cc with value 127 sets the mute bit for oscillator 3, and value 0 clears it', () => {
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = 0x18;
 
             // Turn ON (Mute active)
@@ -448,7 +444,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             muteEvent.controller = Oscillator3Mute;
             muteEvent.value = 127;
 
-            (driver as unknown as DriverExposingInterpret).interpret(muteEvent);
+            interpreter.process(muteEvent);
 
             expect(sid.read(address) & 0x80).toBe(0x80);
 
@@ -457,7 +453,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             unmuteEvent.controller = Oscillator3Mute;
             unmuteEvent.value = 0;
 
-            (driver as unknown as DriverExposingInterpret).interpret(unmuteEvent);
+            interpreter.process(unmuteEvent);
 
             expect(sid.read(address) & 0x80).toBe(0x00);
 
@@ -466,7 +462,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
         test('oscillator 3 mute and filter mode controls preserve other bits in register $18', () => {
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = 0x18;
 
             // 1. Send FilterLowPass (set to 127, enables LP, bit 0x10)
@@ -474,7 +470,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             lpEvent.controller = FilterLowPass;
             lpEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(lpEvent);
+            interpreter.process(lpEvent);
 
             // Verify LP bit is set (0x10)
             expect(sid.read(address)).toBe(0x10);
@@ -483,7 +479,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             const muteEvent = new ControllerEvent(0, channel);
             muteEvent.controller = Oscillator3Mute;
             muteEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(muteEvent);
+            interpreter.process(muteEvent);
 
             // Verify LP bit is preserved, and Mute bit is added (0x10 | 0x80 = 0x90)
             expect(sid.read(address)).toBe(0x10 | 0x80);
@@ -493,7 +489,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             disableLpEvent.controller = FilterLowPass;
             disableLpEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(disableLpEvent);
+            interpreter.process(disableLpEvent);
 
             // Verify Mute bit is preserved, and LP bit is removed (0x80)
             expect(sid.read(address)).toBe(0x80);
@@ -515,9 +511,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             event.value = value;
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
 
-            (driver as unknown as DriverExposingInterpret).interpret(event);
+            interpreter.process(event);
 
             const regVal = sid.read(0x18);
             const volumeBits = regVal & 0x0F;
@@ -529,7 +525,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
         test('volume controls preserve other bits in register $18', () => {
 
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = 0x18;
 
             // 1. Send FilterLowPass (set to 127, enables LP, bit 0x10)
@@ -537,7 +533,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             lpEvent.controller = FilterLowPass;
             lpEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(lpEvent);
+            interpreter.process(lpEvent);
 
             // Verify LP bit is set (0x10)
             expect(sid.read(address)).toBe(0x10);
@@ -546,7 +542,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             const volEvent = new ControllerEvent(0, channel);
             volEvent.controller = MainVolume;
             volEvent.value = 127;
-            (driver as unknown as DriverExposingInterpret).interpret(volEvent);
+            interpreter.process(volEvent);
 
             // Verify LP is preserved, and Volume is set (0x10 | 0x0F = 0x1F)
             expect(sid.read(address)).toBe(0x10 | 0x0F);
@@ -556,7 +552,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
             disableLpEvent.controller = FilterLowPass;
             disableLpEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(disableLpEvent);
+            interpreter.process(disableLpEvent);
 
             // Verify Volume is preserved, and LP is cleared (0x0F)
             expect(sid.read(address)).toBe(0x0F);
@@ -579,18 +575,18 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test.each(testCases)('with base note %s: default +/- 2 semitone bends write correct bytes', (noteName, key, upLo, upHi, downLo, downHi) => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = channel * 7;
 
             // 1. Play note
             const noteEvent = new NoteOnEvent(0, channel);
             noteEvent.key = key;
-            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+            interpreter.process(noteEvent);
 
             // 2. Apply full pitch bend up (amount = 1.0)
             const upEvent = new PitchWheelEvent(0, channel);
             upEvent.amount = 1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(upEvent);
+            interpreter.process(upEvent);
 
             expect(sid.read(address)).toBe(upLo);
             expect(sid.read(address + 1)).toBe(upHi);
@@ -598,7 +594,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // 3. Apply full pitch bend down (amount = -1.0)
             const downEvent = new PitchWheelEvent(0, channel);
             downEvent.amount = -1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(downEvent);
+            interpreter.process(downEvent);
 
             expect(sid.read(address)).toBe(downLo);
             expect(sid.read(address + 1)).toBe(downHi);
@@ -606,35 +602,35 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test.each(testCases)('with base note %s: RPN-configured +/- 12 semitone bends write correct bytes', (noteName, key, _upLo, _upHi, _downLo, _downHi, rpnUpLo, rpnUpHi, rpnDownLo, rpnDownHi) => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = channel * 7;
 
             // 1. Select RPN 00 00 (Pitch Bend Sensitivity)
             const msbEvent = new ControllerEvent(0, channel);
             msbEvent.controller = 101;
             msbEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(msbEvent);
+            interpreter.process(msbEvent);
 
             const lsbEvent = new ControllerEvent(0, channel);
             lsbEvent.controller = 100;
             lsbEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(lsbEvent);
+            interpreter.process(lsbEvent);
 
             // 2. Set range to 12 semitones using Data Entry MSB (CC 6)
             const dataEvent = new ControllerEvent(0, channel);
             dataEvent.controller = 6;
             dataEvent.value = 12;
-            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+            interpreter.process(dataEvent);
 
             // 3. Play note
             const noteEvent = new NoteOnEvent(0, channel);
             noteEvent.key = key;
-            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+            interpreter.process(noteEvent);
 
             // 4. Apply full pitch bend up (amount = 1.0)
             const upEvent = new PitchWheelEvent(0, channel);
             upEvent.amount = 1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(upEvent);
+            interpreter.process(upEvent);
 
             expect(sid.read(address)).toBe(rpnUpLo);
             expect(sid.read(address + 1)).toBe(rpnUpHi);
@@ -642,7 +638,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // 5. Apply full pitch bend down (amount = -1.0)
             const downEvent = new PitchWheelEvent(0, channel);
             downEvent.amount = -1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(downEvent);
+            interpreter.process(downEvent);
 
             expect(sid.read(address)).toBe(rpnDownLo);
             expect(sid.read(address + 1)).toBe(rpnDownHi);
@@ -650,24 +646,24 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('data entry MSB without RPN selection does not alter default bend range', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = channel * 7;
 
             // 1. Play C4
             const noteEvent = new NoteOnEvent(0, channel);
             noteEvent.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+            interpreter.process(noteEvent);
 
             // 2. Send Data Entry MSB (CC 6) with value 12 without selecting RPN
             const dataEvent = new ControllerEvent(0, channel);
             dataEvent.controller = 6;
             dataEvent.value = 12;
-            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+            interpreter.process(dataEvent);
 
             // 3. Apply full up bend
             const bendEvent = new PitchWheelEvent(0, channel);
             bendEvent.amount = 1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+            interpreter.process(bendEvent);
 
             // Should still only bend 2 semitones to D4 (0x1389)
             expect(sid.read(address)).toBe(0x89);
@@ -676,35 +672,35 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('data entry MSB under non-zero RPN does not alter pitch bend range', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             const address = channel * 7;
 
             // 1. Play C4
             const noteEvent = new NoteOnEvent(0, channel);
             noteEvent.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(noteEvent);
+            interpreter.process(noteEvent);
 
             // 2. Select a different RPN (e.g., RPN 00 01 - Fine Tuning)
             const msbEvent = new ControllerEvent(0, channel);
             msbEvent.controller = 101;
             msbEvent.value = 0;
-            (driver as unknown as DriverExposingInterpret).interpret(msbEvent);
+            interpreter.process(msbEvent);
 
             const lsbEvent = new ControllerEvent(0, channel);
             lsbEvent.controller = 100;
             lsbEvent.value = 1; // Non-zero RPN
-            (driver as unknown as DriverExposingInterpret).interpret(lsbEvent);
+            interpreter.process(lsbEvent);
 
             // 3. Send Data Entry MSB (CC 6) with value 12
             const dataEvent = new ControllerEvent(0, channel);
             dataEvent.controller = 6;
             dataEvent.value = 12;
-            (driver as unknown as DriverExposingInterpret).interpret(dataEvent);
+            interpreter.process(dataEvent);
 
             // 4. Apply full up bend
             const bendEvent = new PitchWheelEvent(0, channel);
             bendEvent.amount = 1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+            interpreter.process(bendEvent);
 
             // Should still only bend 2 semitones to D4 (0x1389)
             expect(sid.read(address)).toBe(0x89);
@@ -713,7 +709,7 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
         test('pitch bend on a channel does not affect another channel', () => {
             const sid = mockSID(new module.SID());
-            const driver = new Driver(sid, new Resolution());
+            const interpreter = new MidiInterpreter(sid);
             
             const otherChannel = (channel + 1) % 3;
             const addressChan = channel * 7;
@@ -722,16 +718,16 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             // Play C4 on both channels
             const note1 = new NoteOnEvent(0, channel);
             note1.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(note1);
+            interpreter.process(note1);
 
             const note2 = new NoteOnEvent(0, otherChannel);
             note2.key = 60;
-            (driver as unknown as DriverExposingInterpret).interpret(note2);
+            interpreter.process(note2);
 
             // Apply full pitch bend to our channel
             const bendEvent = new PitchWheelEvent(0, channel);
             bendEvent.amount = 1.0;
-            (driver as unknown as DriverExposingInterpret).interpret(bendEvent);
+            interpreter.process(bendEvent);
 
             // Our channel should be bent up to D4 (0x1389)
             expect(sid.read(addressChan)).toBe(0x89);

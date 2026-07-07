@@ -3,7 +3,8 @@ import path from "path";
 import assert from "assert";
 import { File } from "@perry-rylance/midi";
 import createSIDModule from "../compiled/libresidfp";
-import Driver from "../src/Driver";
+import MidiInterpreter from "../src/MidiInterpreter";
+import Processor from "../src/Processor";
 
 async function main() {
     const filename = process.argv[2];
@@ -28,12 +29,13 @@ async function main() {
 
     const module = await createSIDModule();
     const sid = new module.SID();
-    const driver = new Driver(sid, file.resolution);
+    const midiInterpreter = new MidiInterpreter(sid);
+    const processor = new Processor(midiInterpreter, sid, file.resolution);
 
     // Create a buffer of 10 seconds of silence/PCM at 44.1kHz (441000 samples)
     const pcmBuffer = new Float64Array(44100 * 10);
 
-    driver.process(track, pcmBuffer);
+    processor.process(track, pcmBuffer);
 
     console.log("Processed track successfully.");
 }

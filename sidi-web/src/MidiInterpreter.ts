@@ -1,11 +1,10 @@
-import { Resolution, Track, Event, ControlEvent, SetTempoEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent, PitchWheelEvent } from "@perry-rylance/midi";
+import { Event, ControlEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "./ContinuousController";
 
-export default class Driver
+export default class MidiInterpreter
 {
-    private bpm: number = 120;
     private pcmFrequencyHz: number = 44100;
     private attackDecay: Uint8Array = new Uint8Array(3);
     private sustainRelease: Uint8Array = new Uint8Array(3);
@@ -19,29 +18,19 @@ export default class Driver
     private maxBendSemitones: Uint8Array = new Uint8Array([2, 2, 2]);
     private pitchBendAmount: Float32Array = new Float32Array(3);
 
-    constructor(private sid: SID, private resolution: Resolution, private clockFrequencyHz: number = Pal)
+    constructor(private sid: SID, private clockFrequencyHz: number = Pal)
     {
         this.sid.setSamplingParameters(this.clockFrequencyHz, 0, this.pcmFrequencyHz);
-    }
-
-    private getNumCyclesFromDelta(delta: number): number
-    {
-        return Math.round((delta * 60 * this.clockFrequencyHz) / (this.bpm * this.resolution.ticksPerQuarterNote));
     }
 
     private getExtrapolatedBitValue(value: number, inBits: number, outBits: number)
     {
         const maxIn = (1 << inBits) - 1;
         const maxOut = (1 << outBits) - 1;
-        
-        if (maxIn <= 0) return 0;
-        
-        return Math.round((value / maxIn) * maxOut);
-    }
 
-    private interpretSetTempo(event: SetTempoEvent): void
-    {
-        this.bpm = event.bpm;
+        if (maxIn <= 0) return 0;
+
+        return Math.round((value / maxIn) * maxOut);
     }
 
     private updateFrequency(channel: number): void
@@ -65,7 +54,7 @@ export default class Driver
         this.sid.write(offset + 1, hi);
     }
 
-    private interpretNoteOn(event: NoteOnEvent): void
+    private processNoteOn(event: NoteOnEvent): void
     {
         this.lastPressedKey[event.channel] = event.key;
         this.updateFrequency(event.channel);
@@ -75,13 +64,13 @@ export default class Driver
         this.sid.write(offset + 4, this.controlRegister[event.channel]);
     }
 
-    private interpretPitchWheel(event: PitchWheelEvent): void
+    private processPitchWheel(event: PitchWheelEvent): void
     {
         this.pitchBendAmount[event.channel] = event.amount;
         this.updateFrequency(event.channel);
     }
 
-    private interpretNoteOff(event: NoteOffEvent): void
+    private processNoteOff(event: NoteOffEvent): void
     {
         if (this.lastPressedKey[event.channel] === event.key)
         {
@@ -92,7 +81,7 @@ export default class Driver
         }
     }
 
-    private interpretController(event: ControllerEvent): void
+    private processController(event: ControllerEvent): void
     {
         switch(event.controller as number)
         {
@@ -116,8 +105,8 @@ export default class Driver
             case FilterEnable: {
                 const on = event.value >= 64;
                 const mask = 1 << event.channel;
-                this.filterResonanceSelect = on 
-                    ? (this.filterResonanceSelect | mask) 
+                this.filterResonanceSelect = on
+                    ? (this.filterResonanceSelect | mask)
                     : (this.filterResonanceSelect & ~mask);
                 this.sid.write(0x17, this.filterResonanceSelect);
                 break;
@@ -160,7 +149,7 @@ export default class Driver
                 this.sid.write(offset + 1, hi);
 
                 break;
-            
+
             case Attack:
             case Decay:
             case Sustain:
@@ -177,7 +166,7 @@ export default class Driver
                 const address = event.channel * 7 + regOffset;
                 const currentVal = array[event.channel];
                 const newVal = (currentVal & mask) | (mapped << shift);
-                
+
                 array[event.channel] = newVal;
                 this.sid.write(address, newVal);
                 break;
@@ -226,40 +215,19 @@ export default class Driver
         }
     }
 
-    private interpret(event: Event): void
+    // NB: Public dispatcher mirrors sidi-vst's MidiInterpreter::process(const juce::MidiMessage&).
+    process(event: Event): void
     {
         if(event instanceof ControllerEvent)
-            return this.interpretController(event);
-        
-        if(event instanceof NoteOnEvent)
-            return this.interpretNoteOn(event);
-        
-        if(event instanceof NoteOffEvent)
-            return this.interpretNoteOff(event);
+            return this.processController(event);
 
-        if(event instanceof SetTempoEvent)
-            return this.interpretSetTempo(event);
+        if(event instanceof NoteOnEvent)
+            return this.processNoteOn(event);
+
+        if(event instanceof NoteOffEvent)
+            return this.processNoteOff(event);
 
         if(event instanceof PitchWheelEvent)
-            return this.interpretPitchWheel(event);
-    }
-
-    process(track: Track, buffer: Int16Array): number
-    {
-        let numSamplesWritten = 0;
-
-        track.events.forEach((event) => {
-
-            // TODO: Handle large deltas (eg that would overflow buffer)
-            // TODO: Suggest not using cycles but instead passing in the buffer size when using worklets, this won't allow clock to include the fractional phase steps
-            const cycles = this.getNumCyclesFromDelta(event.delta);
-            const samples = this.sid.clock(cycles, buffer);
-            numSamplesWritten += samples;
-
-            this.interpret(event);
-
-        });
-
-        return numSamplesWritten;
+            return this.processPitchWheel(event);
     }
 }

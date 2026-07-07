@@ -1,9 +1,10 @@
 import { describe, test, expect, beforeAll } from 'vitest';
 import { EndOfTrackEvent, File, SetTempoEvent, Track } from "@perry-rylance/midi";
 import createSIDModule from '../compiled/libresidfp';
-import Driver from '../src/Driver';
+import MidiInterpreter from '../src/MidiInterpreter';
+import Processor from '../src/Processor';
 
-describe('driver timing', () => {
+describe('processor timing', () => {
   let module: any;
 
   beforeAll(async () => {
@@ -42,8 +43,9 @@ describe('driver timing', () => {
       const pcmBuffer = new Int16Array(expectation + overshoot);
 
       const sid = new module.SID();
-      const driver = new Driver(sid, file.resolution);
-      const result = driver.process(track, pcmBuffer);
+      const midiInterpreter = new MidiInterpreter(sid);
+      const processor = new Processor(midiInterpreter, sid, file.resolution);
+      const result = processor.process(track, pcmBuffer);
 
       // NB: Allow for overshoot (see above)
       expect(result).toBeGreaterThanOrEqual(expectation);
