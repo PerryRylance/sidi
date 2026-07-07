@@ -29,7 +29,7 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.noteOn (channel, 60);
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
 
         const int address = channel * 7 + 4;
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x01);
@@ -43,8 +43,8 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.noteOn (channel, 60);
-        interpreter.noteOff (channel, 60);
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
+        interpreter.process (juce::MidiMessage::noteOff (channel + 1, 60));
 
         const int address = channel * 7 + 4;
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x00);
@@ -58,9 +58,9 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.noteOn (channel, 60);  // Press Note A
-        interpreter.noteOn (channel, 64);  // Press Note B (last pressed)
-        interpreter.noteOff (channel, 60); // Release Note A (not the last pressed note)
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));  // Press Note A
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 64, (juce::uint8) 127));  // Press Note B (last pressed)
+        interpreter.process (juce::MidiMessage::noteOff (channel + 1, 60)); // Release Note A (not the last pressed note)
 
         const int address = channel * 7 + 4;
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x01);
@@ -75,14 +75,14 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.noteOn (channel, 60);  // Press Note A
-        interpreter.noteOn (channel, 64);  // Press Note B (last pressed)
-        interpreter.noteOff (channel, 60); // Release Note A (not the last pressed note)
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));  // Press Note A
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 64, (juce::uint8) 127));  // Press Note B (last pressed)
+        interpreter.process (juce::MidiMessage::noteOff (channel + 1, 60)); // Release Note A (not the last pressed note)
 
         const int address = channel * 7 + 4;
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x01); // Gate should still be ON
 
-        interpreter.noteOff (channel, 64); // Release Note B (the last pressed note)
+        interpreter.process (juce::MidiMessage::noteOff (channel + 1, 64)); // Release Note B (the last pressed note)
 
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x00); // Gate should now be OFF
     }

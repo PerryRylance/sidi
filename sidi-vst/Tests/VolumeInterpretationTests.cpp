@@ -42,7 +42,7 @@ private:
             FakeSidChip sid;
             MidiInterpreter interpreter (sid);
 
-            interpreter.controller (channel, ContinuousController::MainVolume, c.value);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::MainVolume, c.value));
 
             const int volumeBits = sid.registers[0x18] & 0x0F;
             expectEquals (volumeBits, c.expectedVolume, "value " + juce::String (c.value));
@@ -56,13 +56,13 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.controller (channel, ContinuousController::FilterLowPass, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 127));
         expectEquals ((int) sid.registers[0x18], 0x10);
 
-        interpreter.controller (channel, ContinuousController::MainVolume, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::MainVolume, 127));
         expectEquals ((int) sid.registers[0x18], 0x10 | 0x0F);
 
-        interpreter.controller (channel, ContinuousController::FilterLowPass, 0);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 0));
         expectEquals ((int) sid.registers[0x18], 0x0F);
     }
 };

@@ -34,7 +34,7 @@ public:
                 FakeSidChip sid;
                 MidiInterpreter interpreter (sid);
 
-                interpreter.controller (channel, ContinuousController::PulseWidth, c.width);
+                interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::PulseWidth, c.width));
 
                 const int address = channel * 7 + 2;
                 expectEquals ((int) sid.registers[(size_t) address], c.lo,

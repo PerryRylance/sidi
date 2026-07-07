@@ -1,24 +1,24 @@
 #pragma once
 
 #include "ISidChip.h"
+#include <juce_audio_basics/juce_audio_basics.h>
 
 /**
     Translates MIDI events into SID register writes on the ISidChip it's
-    given. This is the C++ port target for the interpret*() methods in
-    sidi-web/src/Driver.ts, pulled out into its own class (rather than
-    living as private methods on a Driver equivalent) so it can be driven
-    directly from tests without needing a TypeScript-style private-method
-    cast trick.
+    given. Mirrors sidi-web/src/Driver.ts's single `interpret(event)` entry
+    point: takes a juce::MidiMessage and dispatches on its type internally,
+    rather than exposing one method per message type.
+
+    MIDI channels are 1-based per JUCE convention; they map to 0-based
+    oscillator indices (channels 1-3 select oscillators 0-2, see the
+    top-level README).
 */
 class MidiInterpreter
 {
 public:
     explicit MidiInterpreter (ISidChip& sidChip);
 
-    void noteOn (int channel, int key);
-    void noteOff (int channel, int key);
-    void pitchWheel (int channel, float amount);
-    void controller (int channel, int number, int value);
+    void process (const juce::MidiMessage& message);
 
 private:
     ISidChip& sid;

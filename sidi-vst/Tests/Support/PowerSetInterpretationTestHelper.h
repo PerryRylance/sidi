@@ -48,7 +48,7 @@ inline void expectControlBitPowerSet (juce::UnitTest& test,
         for (auto& bit : bits)
         {
             const bool isSelected = (expectedMask & bit.mask) != 0;
-            interpreter.controller (channel, bit.controller, isSelected ? 127 : 0);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, bit.controller, isSelected ? 127 : 0));
         }
 
         const juce::String description = selectedNames.isEmpty()

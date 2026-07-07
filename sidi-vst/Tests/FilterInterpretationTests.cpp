@@ -48,7 +48,7 @@ private:
             FakeSidChip sid;
             MidiInterpreter interpreter (sid);
 
-            interpreter.controller (channel, ContinuousController::FilterCutoff, c.value);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterCutoff, c.value));
 
             expectEquals ((int) sid.registers[0x15], c.lo, "value " + juce::String (c.value) + " lo byte");
             expectEquals ((int) sid.registers[0x16], c.hi, "value " + juce::String (c.value) + " hi byte");
@@ -77,7 +77,7 @@ private:
             FakeSidChip sid;
             MidiInterpreter interpreter (sid);
 
-            interpreter.controller (channel, ContinuousController::FilterResonance, c.value);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterResonance, c.value));
 
             const int nibble = (sid.registers[0x17] >> 4) & 0x0F;
             expectEquals (nibble, c.expectedNibble, "value " + juce::String (c.value));
@@ -94,10 +94,10 @@ private:
 
         const int expectedBit = 1 << channel;
 
-        interpreter.controller (channel, ContinuousController::FilterEnable, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterEnable, 127));
         expectEquals (sid.registers[0x17] & expectedBit, expectedBit);
 
-        interpreter.controller (channel, ContinuousController::FilterEnable, 0);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterEnable, 0));
         expectEquals (sid.registers[0x17] & expectedBit, 0x00);
     }
 
@@ -108,14 +108,14 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.controller (channel, ContinuousController::FilterResonance, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterResonance, 127));
         expectEquals ((int) sid.registers[0x17], 0xF0);
 
-        interpreter.controller (channel, ContinuousController::FilterEnable, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterEnable, 127));
         const int expectedBit = 1 << channel;
         expectEquals ((int) sid.registers[0x17], 0xF0 | expectedBit);
 
-        interpreter.controller (channel, ContinuousController::FilterEnable, 0);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterEnable, 0));
         expectEquals ((int) sid.registers[0x17], 0xF0);
     }
 
@@ -139,10 +139,10 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.controller (channel, ContinuousController::Oscillator3Mute, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::Oscillator3Mute, 127));
         expectEquals (sid.registers[0x18] & 0x80, 0x80);
 
-        interpreter.controller (channel, ContinuousController::Oscillator3Mute, 0);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::Oscillator3Mute, 0));
         expectEquals (sid.registers[0x18] & 0x80, 0x00);
     }
 
@@ -154,13 +154,13 @@ private:
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
 
-        interpreter.controller (channel, ContinuousController::FilterLowPass, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 127));
         expectEquals ((int) sid.registers[0x18], 0x10);
 
-        interpreter.controller (channel, ContinuousController::Oscillator3Mute, 127);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::Oscillator3Mute, 127));
         expectEquals ((int) sid.registers[0x18], 0x10 | 0x80);
 
-        interpreter.controller (channel, ContinuousController::FilterLowPass, 0);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 0));
         expectEquals ((int) sid.registers[0x18], 0x80);
     }
 };

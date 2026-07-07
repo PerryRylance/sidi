@@ -32,7 +32,7 @@ public:
                 FakeSidChip sid;
                 MidiInterpreter interpreter (sid);
 
-                interpreter.noteOn (channel, c.key);
+                interpreter.process (juce::MidiMessage::noteOn (channel + 1, c.key, (juce::uint8) 127));
 
                 const int address = channel * 7;
                 expectEquals ((int) sid.registers[(size_t) address], c.lo,

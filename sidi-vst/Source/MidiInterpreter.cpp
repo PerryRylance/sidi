@@ -1,26 +1,14 @@
 #include "MidiInterpreter.h"
 
-// NB: Left as no-ops so the ported test suite in ../Tests compiles, links,
+// NB: Left as a no-op so the ported test suite in ../Tests compiles, links,
 // and runs red. Port the logic from sidi-web/src/Driver.ts's interpret*()
-// methods here.
+// methods here, dispatching on the incoming juce::MidiMessage.
 
 MidiInterpreter::MidiInterpreter (ISidChip& sidChip)
     : sid (sidChip)
 {
 }
 
-void MidiInterpreter::noteOn (int, int)
-{
-}
-
-void MidiInterpreter::noteOff (int, int)
-{
-}
-
-void MidiInterpreter::pitchWheel (int, float)
-{
-}
-
-void MidiInterpreter::controller (int, int, int)
+void MidiInterpreter::process (const juce::MidiMessage&)
 {
 }

@@ -56,15 +56,15 @@ private:
             FakeSidChip sid;
             MidiInterpreter interpreter (sid);
 
-            interpreter.noteOn (channel, c.key);
+            interpreter.process (juce::MidiMessage::noteOn (channel + 1, c.key, (juce::uint8) 127));
 
-            interpreter.pitchWheel (channel, 1.0f);
+            interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 16383)); // NB: max position, expected to interpret as amount +1.0
             expectEquals ((int) sid.registers[(size_t) address], c.defaultUpLo,
                           juce::String (c.noteName) + " up lo byte");
             expectEquals ((int) sid.registers[(size_t) address + 1], c.defaultUpHi,
                           juce::String (c.noteName) + " up hi byte");
 
-            interpreter.pitchWheel (channel, -1.0f);
+            interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 0)); // NB: min position, expected to interpret as amount -1.0
             expectEquals ((int) sid.registers[(size_t) address], c.defaultDownLo,
                           juce::String (c.noteName) + " down lo byte");
             expectEquals ((int) sid.registers[(size_t) address + 1], c.defaultDownHi,
@@ -84,24 +84,24 @@ private:
             MidiInterpreter interpreter (sid);
 
             // 1. Select RPN 00 00 (Pitch Bend Sensitivity)
-            interpreter.controller (channel, ContinuousController::RpnMsb, 0);
-            interpreter.controller (channel, ContinuousController::RpnLsb, 0);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::RpnMsb, 0));
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::RpnLsb, 0));
 
             // 2. Set range to 12 semitones using Data Entry MSB (CC 6)
-            interpreter.controller (channel, ContinuousController::DataEntryMsb, 12);
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::DataEntryMsb, 12));
 
             // 3. Play note
-            interpreter.noteOn (channel, c.key);
+            interpreter.process (juce::MidiMessage::noteOn (channel + 1, c.key, (juce::uint8) 127));
 
             // 4. Apply full pitch bend up
-            interpreter.pitchWheel (channel, 1.0f);
+            interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 16383)); // NB: max position, expected to interpret as amount +1.0
             expectEquals ((int) sid.registers[(size_t) address], c.rpnUpLo,
                           juce::String (c.noteName) + " RPN up lo byte");
             expectEquals ((int) sid.registers[(size_t) address + 1], c.rpnUpHi,
                           juce::String (c.noteName) + " RPN up hi byte");
 
             // 5. Apply full pitch bend down
-            interpreter.pitchWheel (channel, -1.0f);
+            interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 0)); // NB: min position, expected to interpret as amount -1.0
             expectEquals ((int) sid.registers[(size_t) address], c.rpnDownLo,
                           juce::String (c.noteName) + " RPN down lo byte");
             expectEquals ((int) sid.registers[(size_t) address + 1], c.rpnDownHi,
@@ -118,13 +118,13 @@ private:
         MidiInterpreter interpreter (sid);
 
         // 1. Play C4
-        interpreter.noteOn (channel, 60);
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
 
         // 2. Send Data Entry MSB (CC 6) with value 12 without selecting RPN
-        interpreter.controller (channel, ContinuousController::DataEntryMsb, 12);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::DataEntryMsb, 12));
 
         // 3. Apply full up bend
-        interpreter.pitchWheel (channel, 1.0f);
+        interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 16383)); // NB: max position, expected to interpret as amount +1.0
 
         // Should still only bend 2 semitones to D4 (0x1389)
         const int address = channel * 7;
@@ -141,17 +141,17 @@ private:
         MidiInterpreter interpreter (sid);
 
         // 1. Play C4
-        interpreter.noteOn (channel, 60);
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
 
         // 2. Select a different RPN (e.g., RPN 00 01 - Fine Tuning)
-        interpreter.controller (channel, ContinuousController::RpnMsb, 0);
-        interpreter.controller (channel, ContinuousController::RpnLsb, 1); // Non-zero RPN
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::RpnMsb, 0));
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::RpnLsb, 1)); // Non-zero RPN
 
         // 3. Send Data Entry MSB (CC 6) with value 12
-        interpreter.controller (channel, ContinuousController::DataEntryMsb, 12);
+        interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::DataEntryMsb, 12));
 
         // 4. Apply full up bend
-        interpreter.pitchWheel (channel, 1.0f);
+        interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 16383)); // NB: max position, expected to interpret as amount +1.0
 
         // Should still only bend 2 semitones to D4 (0x1389)
         const int address = channel * 7;
@@ -171,11 +171,11 @@ private:
         const int addressOther = otherChannel * 7;
 
         // Play C4 on both channels
-        interpreter.noteOn (channel, 60);
-        interpreter.noteOn (otherChannel, 60);
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
+        interpreter.process (juce::MidiMessage::noteOn (otherChannel + 1, 60, (juce::uint8) 127));
 
         // Apply full pitch bend to our channel
-        interpreter.pitchWheel (channel, 1.0f);
+        interpreter.process (juce::MidiMessage::pitchWheel (channel + 1, 16383)); // NB: max position, expected to interpret as amount +1.0
 
         // Our channel should be bent up to D4 (0x1389)
         expectEquals ((int) sid.registers[(size_t) addressChannel], 0x89);
