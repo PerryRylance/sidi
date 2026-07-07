@@ -1,0 +1,31 @@
+# Visual Studio / MSVC build output, intermediates and per-user caches
+**/VisualStudio[0-9]*/Win32
+**/VisualStudio[0-9]*/x64
+**/VisualStudio[0-9]*/.vs
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.pdb
+*.ilk
+*.obj
+*.res
+*.tlog/
+*.lastbuildstate
+*.log
+*.idb
+*.ipch
+UpgradeLog.htm
+
+# JUCE Projucer build output for other exporters, if this project ever adds them
+**/Builds/MacOSX/build
+**/Builds/LinuxMakefile/build
+**/Builds/Android/build
+**/Builds/Android/.gradle
+**/Builds/Android/.idea
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
