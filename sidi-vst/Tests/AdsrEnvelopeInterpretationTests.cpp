@@ -1,6 +1,6 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'adsr envelope interpretation' describe block in
@@ -8,7 +8,7 @@
 class AdsrEnvelopeInterpretationTests : public juce::UnitTest
 {
 public:
-    AdsrEnvelopeInterpretationTests() : juce::UnitTest ("ADSR envelope interpretation", "SidRegisterInterpreter") {}
+    AdsrEnvelopeInterpretationTests() : juce::UnitTest ("ADSR envelope interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -49,7 +49,7 @@ public:
                 for (auto& c : cases)
                 {
                     FakeSidChip sid;
-                    SidRegisterInterpreter interpreter (sid);
+                    MidiInterpreter interpreter (sid);
 
                     interpreter.controller (channel, parameter.controller, c.ccValue);
 

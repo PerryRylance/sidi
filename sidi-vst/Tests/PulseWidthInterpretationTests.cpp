@@ -1,6 +1,6 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'pulse width interpretation' describe block in
@@ -8,7 +8,7 @@
 class PulseWidthInterpretationTests : public juce::UnitTest
 {
 public:
-    PulseWidthInterpretationTests() : juce::UnitTest ("Pulse width interpretation", "SidRegisterInterpreter") {}
+    PulseWidthInterpretationTests() : juce::UnitTest ("Pulse width interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -32,7 +32,7 @@ public:
             for (auto& c : cases)
             {
                 FakeSidChip sid;
-                SidRegisterInterpreter interpreter (sid);
+                MidiInterpreter interpreter (sid);
 
                 interpreter.controller (channel, ContinuousController::PulseWidth, c.width);
 

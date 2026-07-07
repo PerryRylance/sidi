@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ISidChip.h"
+#include "../../Source/ISidChip.h"
 #include <array>
 #include <cstdint>
 #include <vector>

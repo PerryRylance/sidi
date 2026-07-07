@@ -3,7 +3,7 @@
 #include <cstdint>
 
 /**
-    The seam SidRegisterInterpreter depends on instead of reSIDfp::SID
+    The seam MidiInterpreter depends on instead of reSIDfp::SID
     directly. reSIDfp::SID has no virtual methods, so it can't be subclassed
     and overridden for testing - this interface exists to make that possible.
 

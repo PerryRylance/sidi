@@ -1,7 +1,7 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
 #include "Support/PowerSetInterpretationTestHelper.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'filter interpretation' describe block in
@@ -9,7 +9,7 @@
 class FilterInterpretationTests : public juce::UnitTest
 {
 public:
-    FilterInterpretationTests() : juce::UnitTest ("Filter interpretation", "SidRegisterInterpreter") {}
+    FilterInterpretationTests() : juce::UnitTest ("Filter interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -46,7 +46,7 @@ private:
         for (auto& c : cases)
         {
             FakeSidChip sid;
-            SidRegisterInterpreter interpreter (sid);
+            MidiInterpreter interpreter (sid);
 
             interpreter.controller (channel, ContinuousController::FilterCutoff, c.value);
 
@@ -75,7 +75,7 @@ private:
         for (auto& c : cases)
         {
             FakeSidChip sid;
-            SidRegisterInterpreter interpreter (sid);
+            MidiInterpreter interpreter (sid);
 
             interpreter.controller (channel, ContinuousController::FilterResonance, c.value);
 
@@ -90,7 +90,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         const int expectedBit = 1 << channel;
 
@@ -106,7 +106,7 @@ private:
         beginTest ("filter controls preserve other bits in register $17, channel " + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.controller (channel, ContinuousController::FilterResonance, 127);
         expectEquals ((int) sid.registers[0x17], 0xF0);
@@ -137,7 +137,7 @@ private:
         beginTest ("Oscillator3Mute cc 127 sets the mute bit, 0 clears it, channel " + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.controller (channel, ContinuousController::Oscillator3Mute, 127);
         expectEquals (sid.registers[0x18] & 0x80, 0x80);
@@ -152,7 +152,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.controller (channel, ContinuousController::FilterLowPass, 127);
         expectEquals ((int) sid.registers[0x18], 0x10);

@@ -13,6 +13,13 @@
       <FILE id="GIH9JH" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="MCSLbi" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="a1B2c3" name="MidiInterpreter.cpp" compile="1" resource="0"
+            file="Source/MidiInterpreter.cpp"/>
+      <FILE id="d4E5f6" name="MidiInterpreter.h" compile="0" resource="0"
+            file="Source/MidiInterpreter.h"/>
+      <FILE id="g7H8i9" name="ISidChip.h" compile="0" resource="0" file="Source/ISidChip.h"/>
+      <FILE id="j0K1l2" name="ContinuousController.h" compile="0" resource="0"
+            file="Source/ContinuousController.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES/>

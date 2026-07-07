@@ -1,4 +1,4 @@
-# Standalone build for the SID register interpretation test suite.
+# Standalone build for the MIDI interpretation test suite.
 #
 # This is deliberately independent of the Projucer/VS2026 plugin build -
 # these tests need only juce_core (no audio device, no VST3 SDK), so a
@@ -35,7 +35,7 @@ TEST_SOURCES := \
 OBJECTS := \
     $(BUILD_DIR)/JuceCoreModule.o \
     $(BUILD_DIR)/juce_core_CompilationTime.o \
-    $(BUILD_DIR)/SidRegisterInterpreter.o \
+    $(BUILD_DIR)/MidiInterpreter.o \
     $(BUILD_DIR)/Main.o \
     $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(TEST_SOURCES))
 
@@ -54,7 +54,7 @@ $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
 $(BUILD_DIR)/JuceCoreModule.o: Support/JuceCoreModule.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/SidRegisterInterpreter.o: Support/SidRegisterInterpreter.cpp | $(BUILD_DIR)
+$(BUILD_DIR)/MidiInterpreter.o: ../Source/MidiInterpreter.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/juce_core_CompilationTime.o: $(JUCE_MODULES)/juce_core/juce_core_CompilationTime.cpp | $(BUILD_DIR)

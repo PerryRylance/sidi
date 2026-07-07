@@ -1,4 +1,4 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/PowerSetInterpretationTestHelper.h"
 
 // Port of the 'waveform interpretation' describe block (testControlRegisterBits
@@ -6,7 +6,7 @@
 class WaveformInterpretationTests : public juce::UnitTest
 {
 public:
-    WaveformInterpretationTests() : juce::UnitTest ("Waveform interpretation", "SidRegisterInterpreter") {}
+    WaveformInterpretationTests() : juce::UnitTest ("Waveform interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {

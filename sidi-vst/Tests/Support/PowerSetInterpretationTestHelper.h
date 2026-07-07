@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FakeSidChip.h"
-#include "SidRegisterInterpreter.h"
+#include "../../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 #include <cstdint>
 #include <vector>
@@ -19,7 +19,7 @@ struct ControlBit
 // (the power set), asserting that register `address` ends up holding
 // exactly the OR of the selected masks. Mirrors the testControlRegisterBits/
 // testFilterModeBits helpers in sidi-web/tests/interpreter.test.ts. A fresh
-// FakeSidChip/SidRegisterInterpreter pair is used per combination, matching
+// FakeSidChip/MidiInterpreter pair is used per combination, matching
 // how the JS test constructs a fresh driver per test.each row.
 inline void expectControlBitPowerSet (juce::UnitTest& test,
                                        int channel,
@@ -43,7 +43,7 @@ inline void expectControlBitPowerSet (juce::UnitTest& test,
         }
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         for (auto& bit : bits)
         {

@@ -1,6 +1,6 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 #include <vector>
 
@@ -10,7 +10,7 @@ class PitchBendAndRpnRangeInterpretationTests : public juce::UnitTest
 {
 public:
     PitchBendAndRpnRangeInterpretationTests()
-        : juce::UnitTest ("Pitch bend and RPN range interpretation", "SidRegisterInterpreter")
+        : juce::UnitTest ("Pitch bend and RPN range interpretation", "MidiInterpreter")
     {
     }
 
@@ -54,7 +54,7 @@ private:
         for (auto& c : cases)
         {
             FakeSidChip sid;
-            SidRegisterInterpreter interpreter (sid);
+            MidiInterpreter interpreter (sid);
 
             interpreter.noteOn (channel, c.key);
 
@@ -81,7 +81,7 @@ private:
         for (auto& c : cases)
         {
             FakeSidChip sid;
-            SidRegisterInterpreter interpreter (sid);
+            MidiInterpreter interpreter (sid);
 
             // 1. Select RPN 00 00 (Pitch Bend Sensitivity)
             interpreter.controller (channel, ContinuousController::RpnMsb, 0);
@@ -115,7 +115,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         // 1. Play C4
         interpreter.noteOn (channel, 60);
@@ -138,7 +138,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         // 1. Play C4
         interpreter.noteOn (channel, 60);
@@ -164,7 +164,7 @@ private:
         beginTest ("pitch bend on a channel does not affect another channel, channel " + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         const int otherChannel = (channel + 1) % 3;
         const int addressChannel = channel * 7;

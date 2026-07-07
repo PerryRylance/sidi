@@ -1,6 +1,6 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'volume interpretation' describe block in
@@ -8,7 +8,7 @@
 class VolumeInterpretationTests : public juce::UnitTest
 {
 public:
-    VolumeInterpretationTests() : juce::UnitTest ("Volume interpretation", "SidRegisterInterpreter") {}
+    VolumeInterpretationTests() : juce::UnitTest ("Volume interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -40,7 +40,7 @@ private:
         for (auto& c : cases)
         {
             FakeSidChip sid;
-            SidRegisterInterpreter interpreter (sid);
+            MidiInterpreter interpreter (sid);
 
             interpreter.controller (channel, ContinuousController::MainVolume, c.value);
 
@@ -54,7 +54,7 @@ private:
         beginTest ("volume controls preserve other bits in register $18, channel " + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.controller (channel, ContinuousController::FilterLowPass, 127);
         expectEquals ((int) sid.registers[0x18], 0x10);

@@ -1,4 +1,4 @@
-#include "Support/ContinuousController.h"
+#include "../Source/ContinuousController.h"
 #include "Support/PowerSetInterpretationTestHelper.h"
 
 // Port of the 'control interpretation' describe block (testControlRegisterBits
@@ -6,7 +6,7 @@
 class ControlBitsInterpretationTests : public juce::UnitTest
 {
 public:
-    ControlBitsInterpretationTests() : juce::UnitTest ("Control bits interpretation", "SidRegisterInterpreter") {}
+    ControlBitsInterpretationTests() : juce::UnitTest ("Control bits interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {

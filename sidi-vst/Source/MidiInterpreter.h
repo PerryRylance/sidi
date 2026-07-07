@@ -10,10 +10,10 @@
     directly from tests without needing a TypeScript-style private-method
     cast trick.
 */
-class SidRegisterInterpreter
+class MidiInterpreter
 {
 public:
-    explicit SidRegisterInterpreter (ISidChip& sidChip);
+    explicit MidiInterpreter (ISidChip& sidChip);
 
     void noteOn (int channel, int key);
     void noteOff (int channel, int key);

@@ -1,5 +1,5 @@
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'note control interpretation' describe block (GATE bit
@@ -8,7 +8,7 @@
 class NoteControlInterpretationTests : public juce::UnitTest
 {
 public:
-    NoteControlInterpretationTests() : juce::UnitTest ("Note control interpretation", "SidRegisterInterpreter") {}
+    NoteControlInterpretationTests() : juce::UnitTest ("Note control interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -27,7 +27,7 @@ private:
         beginTest ("interpreting a note on turns the GATE bit ON, channel " + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.noteOn (channel, 60);
 
@@ -41,7 +41,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.noteOn (channel, 60);
         interpreter.noteOff (channel, 60);
@@ -56,7 +56,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.noteOn (channel, 60);  // Press Note A
         interpreter.noteOn (channel, 64);  // Press Note B (last pressed)
@@ -73,7 +73,7 @@ private:
                    + juce::String (channel));
 
         FakeSidChip sid;
-        SidRegisterInterpreter interpreter (sid);
+        MidiInterpreter interpreter (sid);
 
         interpreter.noteOn (channel, 60);  // Press Note A
         interpreter.noteOn (channel, 64);  // Press Note B (last pressed)

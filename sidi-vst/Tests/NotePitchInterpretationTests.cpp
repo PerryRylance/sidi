@@ -1,5 +1,5 @@
 #include "Support/FakeSidChip.h"
-#include "Support/SidRegisterInterpreter.h"
+#include "../Source/MidiInterpreter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'note pitch interpretation' describe block in
@@ -7,7 +7,7 @@
 class NotePitchInterpretationTests : public juce::UnitTest
 {
 public:
-    NotePitchInterpretationTests() : juce::UnitTest ("Note pitch interpretation", "SidRegisterInterpreter") {}
+    NotePitchInterpretationTests() : juce::UnitTest ("Note pitch interpretation", "MidiInterpreter") {}
 
     void runTest() override
     {
@@ -30,7 +30,7 @@ public:
             for (auto& c : cases)
             {
                 FakeSidChip sid;
-                SidRegisterInterpreter interpreter (sid);
+                MidiInterpreter interpreter (sid);
 
                 interpreter.noteOn (channel, c.key);
 
