@@ -20,6 +20,10 @@
       <FILE id="g7H8i9" name="ISidChip.h" compile="0" resource="0" file="Source/ISidChip.h"/>
       <FILE id="j0K1l2" name="ContinuousController.h" compile="0" resource="0"
             file="Source/ContinuousController.h"/>
+      <FILE id="m3N4o5" name="SidChipAdapter.cpp" compile="1" resource="0"
+            file="Source/SidChipAdapter.cpp"/>
+      <FILE id="p6Q7r8" name="SidChipAdapter.h" compile="0" resource="0"
+            file="Source/SidChipAdapter.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES/>

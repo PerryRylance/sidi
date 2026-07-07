@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "SID.h"
 
 //==============================================================================
 NewProjectAudioProcessor::NewProjectAudioProcessor()
@@ -93,14 +94,24 @@ void NewProjectAudioProcessor::changeProgramName (int index, const juce::String&
 //==============================================================================
 void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    sid = std::make_unique<reSIDfp::SID>();
+    sid->setChipModel (reSIDfp::CSG8580);
+    sid->setSamplingParameters (985248.0, reSIDfp::RESAMPLE, sampleRate); // NB: PAL clock, see sidi-web/src/ClockFrequencyHz.ts
+
+    sidChipAdapter = std::make_unique<SidChipAdapter> (*sid);
+    midiInterpreter = std::make_unique<MidiInterpreter> (*sidChipAdapter);
+
+    sidOutputBuffer.resize ((size_t) samplesPerBlock);
 }
 
 void NewProjectAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+    // The emulator carries internal state (filter/envelope history, bus
+    // value decay, etc.) that shouldn't leak between DAW playbacks, so we
+    // discard it here rather than just resetting registers.
+    midiInterpreter.reset();
+    sidChipAdapter.reset();
+    sid.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -132,29 +143,40 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    const int numSamples = buffer.getNumSamples();
+    int currentSample = 0;
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (const auto metadata : midiMessages)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        const int delta = metadata.samplePosition - currentSample;
 
-        // ..do something to the data...
+        if (delta > 0)
+        {
+            sid->clock (sidOutputBuffer.data(), delta);
+            writeSidOutputToBuffer (buffer, currentSample, delta);
+            currentSample += delta;
+        }
+
+        midiInterpreter->process (metadata.getMessage());
+    }
+
+    if (currentSample < numSamples)
+    {
+        const int remaining = numSamples - currentSample;
+        sid->clock (sidOutputBuffer.data(), remaining);
+        writeSidOutputToBuffer (buffer, currentSample, remaining);
+    }
+}
+
+void NewProjectAudioProcessor::writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite)
+{
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+    {
+        auto* channelData = buffer.getWritePointer (channel, startSample);
+
+        for (int i = 0; i < numSamplesToWrite; ++i)
+            channelData[i] = (float) sidOutputBuffer[(size_t) i] / 32768.0f;
     }
 }
 

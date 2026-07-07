@@ -9,6 +9,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "MidiInterpreter.h"
+#include "SidChipAdapter.h"
+#include <memory>
+#include <vector>
+
+namespace reSIDfp { class SID; }
 
 //==============================================================================
 /**
@@ -55,5 +61,12 @@ public:
 
 private:
     //==============================================================================
+    void writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite);
+
+    std::unique_ptr<reSIDfp::SID> sid;
+    std::unique_ptr<SidChipAdapter> sidChipAdapter;
+    std::unique_ptr<MidiInterpreter> midiInterpreter;
+    std::vector<int16_t> sidOutputBuffer;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
 };
