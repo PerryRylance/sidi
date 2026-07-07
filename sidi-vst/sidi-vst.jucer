@@ -24,15 +24,123 @@
             file="Source/SidChipAdapter.cpp"/>
       <FILE id="p6Q7r8" name="SidChipAdapter.h" compile="0" resource="0"
             file="Source/SidChipAdapter.h"/>
+      <FILE id="msvcCp1" name="MsvcCompat.h" compile="0" resource="0"
+            file="Source/MsvcCompat.h"/>
+    </GROUP>
+    <GROUP id="302b0148" name="reSIDfp">
+      <FILE id="3e4aec31" name="Dac.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Dac.cpp"/>
+      <FILE id="508e9ac0" name="Dac.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Dac.h"/>
+      <FILE id="a32a9152" name="EnvelopeGenerator.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/EnvelopeGenerator.cpp"/>
+      <FILE id="fd8a1d60" name="EnvelopeGenerator.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/EnvelopeGenerator.h"/>
+      <FILE id="e5bb4308" name="ExternalFilter.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/ExternalFilter.cpp"/>
+      <FILE id="735d96ea" name="ExternalFilter.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/ExternalFilter.h"/>
+      <FILE id="357da41d" name="Filter.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter.cpp"/>
+      <FILE id="c9da866e" name="Filter.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter.h"/>
+      <FILE id="4fcfad5d" name="Filter6581.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter6581.cpp"/>
+      <FILE id="1e1d2d42" name="Filter6581.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter6581.h"/>
+      <FILE id="a90ebada" name="Filter8580.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter8580.cpp"/>
+      <FILE id="05ec8e36" name="Filter8580.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Filter8580.h"/>
+      <FILE id="b0daba13" name="FilterModelConfig.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig.cpp"/>
+      <FILE id="a3c720ab" name="FilterModelConfig.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig.h"/>
+      <FILE id="21df4c8e" name="FilterModelConfig6581.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig6581.cpp"/>
+      <FILE id="ad1b62ef" name="FilterModelConfig6581.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig6581.h"/>
+      <FILE id="07454a14" name="FilterModelConfig8580.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig8580.cpp"/>
+      <FILE id="f0c5bb0b" name="FilterModelConfig8580.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/FilterModelConfig8580.h"/>
+      <FILE id="2770ed1e" name="Integrator.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Integrator.h"/>
+      <FILE id="175c9028" name="Integrator6581.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Integrator6581.cpp"/>
+      <FILE id="07014132" name="Integrator6581.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Integrator6581.h"/>
+      <FILE id="2748b3a3" name="Integrator8580.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Integrator8580.cpp"/>
+      <FILE id="f300fe54" name="Integrator8580.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Integrator8580.h"/>
+      <FILE id="d84393f9" name="OpAmp.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/OpAmp.cpp"/>
+      <FILE id="45cb54a8" name="OpAmp.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/OpAmp.h"/>
+      <FILE id="18038ec5" name="SID.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/SID.cpp"/>
+      <FILE id="f4d4c8a4" name="SID.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/SID.h"/>
+      <FILE id="a873c6a6" name="Spline.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/Spline.cpp"/>
+      <FILE id="85a704eb" name="Spline.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Spline.h"/>
+      <FILE id="b1976b16" name="Voice.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/Voice.h"/>
+      <FILE id="fa4dccc9" name="WaveformCalculator.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/WaveformCalculator.cpp"/>
+      <FILE id="73b55238" name="WaveformCalculator.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/WaveformCalculator.h"/>
+      <FILE id="7739b607" name="WaveformGenerator.cpp" compile="1" resource="0"
+            file="../sidi-web/libresidfp-main/src/WaveformGenerator.cpp"/>
+      <FILE id="8c3b2c9f" name="WaveformGenerator.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/WaveformGenerator.h"/>
+      <FILE id="dc62c853" name="array.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/array.h"/>
+      <FILE id="2fb75ed6" name="siddefs-fp.h" compile="0" resource="0"
+            file="../sidi-web/libresidfp-main/src/siddefs-fp.h"/>
+      <GROUP id="b5767bab" name="resample">
+        <FILE id="05864fb2" name="Limiter.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/Limiter.h"/>
+        <FILE id="1bb8490f" name="PassThrough.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/PassThrough.h"/>
+        <FILE id="b430a756" name="Resampler.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/Resampler.h"/>
+        <FILE id="ca85abce" name="SincResampler.cpp" compile="1" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/SincResampler.cpp"/>
+        <FILE id="6197630d" name="SincResampler.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/SincResampler.h"/>
+        <FILE id="d11592de" name="TwoPassSincResampler.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/TwoPassSincResampler.h"/>
+        <FILE id="9de574e4" name="ZeroOrderResampler.h" compile="0" resource="0"
+              file="../sidi-web/libresidfp-main/src/resample/ZeroOrderResampler.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
-  <MODULES/>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
-    <VS2026 targetFolder="Builds/VisualStudio2026">
+    <VS2026 targetFolder="Builds/VisualStudio2026" extraCompilerFlags="/Zc:__cplusplus /FID:/Programming/Personal/sidi/sidi-vst/Source/MsvcCompat.h">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="NewProject"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="NewProject"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="NewProject"
+                       headerPath="../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="NewProject"
+                       headerPath="../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample"/>
       </CONFIGURATIONS>
     </VS2026>
   </EXPORTFORMATS>
