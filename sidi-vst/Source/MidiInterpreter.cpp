@@ -22,6 +22,9 @@ namespace
 MidiInterpreter::MidiInterpreter (ISidChip& sidChip)
     : sid (sidChip)
 {
+    controlRegister[0] =
+        controlRegister[1] =
+        controlRegister[2] = 0x20; // NB: Default saw waveform
 }
 
 void MidiInterpreter::process (const juce::MidiMessage& message)
