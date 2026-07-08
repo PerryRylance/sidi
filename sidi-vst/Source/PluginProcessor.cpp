@@ -177,6 +177,7 @@ void NewProjectAudioProcessor::writeSidOutputToBuffer (juce::AudioBuffer<float>&
 
         for (int i = 0; i < numSamplesToWrite; ++i)
             channelData[i] = (float) sidOutputBuffer[(size_t) i] / 32768.0f;
+
     }
 }
 
