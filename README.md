@@ -75,3 +75,6 @@ Future versions will:
 ## References
 - [SID reference](https://www.oxyron.de/html/registers_sid.html)
 - [MIDI CC list](https://anotherproducer.com/online-tools-for-musicians/midi-cc-list/)
+
+TODO: Move libresid up a level, consider submodule
+TODO: Add sensible defaults to sidi-web
