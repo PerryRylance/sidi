@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ISidChip.h"
+#include <array>
+#include <atomic>
 
 namespace reSIDfp { class SID; }
 
@@ -12,10 +14,18 @@ namespace reSIDfp { class SID; }
 class SidChipAdapter : public ISidChip
 {
 public:
+    // NB: SID registers span 0x00-0x18 (25 registers)
+    static constexpr int numRegisters = 0x19;
+
     explicit SidChipAdapter (reSIDfp::SID& sidChip);
 
     void write (int offset, uint8_t value) override;
 
+    // NB: Safe to call from any thread; used by the editor to display
+    // live register state without touching the audio thread's sid object.
+    uint8_t getRegisterValue (int offset) const;
+
 private:
     reSIDfp::SID& sid;
+    std::array<std::atomic<uint8_t>, numRegisters> lastWrittenValues {};
 };

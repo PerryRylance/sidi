@@ -59,6 +59,12 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    //==============================================================================
+    // NB: Null between construction/releaseResources and prepareToPlay; the
+    // editor must guard against this when polling for register state.
+    const SidChipAdapter* getSidChipAdapter() const noexcept { return sidChipAdapter.get(); }
+    const MidiInterpreter* getMidiInterpreter() const noexcept { return midiInterpreter.get(); }
+
 private:
     //==============================================================================
     void writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite);

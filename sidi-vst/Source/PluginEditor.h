@@ -14,7 +14,8 @@
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor
+class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                         private juce::Timer
 {
 public:
     NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
@@ -25,6 +26,11 @@ public:
     void resized() override;
 
 private:
+    void timerCallback() override;
+
+    void drawOscillatorPanel (juce::Graphics& g, juce::Rectangle<int> bounds, int channel);
+    void drawInternalStatePanel (juce::Graphics& g, juce::Rectangle<int> bounds, int channel);
+
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     NewProjectAudioProcessor& audioProcessor;

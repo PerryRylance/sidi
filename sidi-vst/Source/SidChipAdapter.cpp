@@ -6,16 +6,30 @@ SidChipAdapter::SidChipAdapter (reSIDfp::SID& sidChip)
 {
     // NB: Zero everything first
     for (int i = 0; i < 18; ++i)
-        sid.write(i, 0);
+        write (i, 0);
 
     for (int i = 0; i < 3; ++i)
-        sid.write((0x7 * i) + 0x6, 0xf0); // NB: Full sustain, no release
+    {
+        write ((0x7 * i) + 0x4, 0x20); // NB: Default saw waveform
+        write ((0x7 * i) + 0x6, 0xf0); // NB: Full sustain, no release
+    }
 
     // NB: Full volume
-    sid.write(0x18, 0xf);
+    write (0x18, 0xf);
 }
 
 void SidChipAdapter::write (int offset, uint8_t value)
 {
     sid.write (offset, value);
+
+    if (offset >= 0 && offset < numRegisters)
+        lastWrittenValues[(size_t) offset].store (value, std::memory_order_relaxed);
+}
+
+uint8_t SidChipAdapter::getRegisterValue (int offset) const
+{
+    if (offset < 0 || offset >= numRegisters)
+        return 0;
+
+    return lastWrittenValues[(size_t) offset].load (std::memory_order_relaxed);
 }
