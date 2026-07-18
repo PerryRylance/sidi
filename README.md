@@ -59,7 +59,19 @@ Controllers which are `continuous` use the full range of the controlleres parame
 TODO: Instructions on how to do a JUCE build
 
 ### Web
-TODO: Instructions on how to do WASM build for sidi-web
+`libresidfp-main` is a git submodule, so after cloning run:
+```
+git submodule update --init
+node scripts/setup-libresidfp.js
+```
+This checks out the pinned libresidfp commit, applies the Emscripten single-threaded filter-init patch (`patches/0001-emscripten-single-threaded-filter-init.patch`), and generates the config headers libresidfp's autotools build would normally produce (`siddefs-fp.h`, `residfp/sidversion.h`).
+
+With an [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) on your `PATH`, build the WASM module from `sidi-web`:
+```
+npm run build:wasm
+```
+This compiles `sidi-web/agents/SID_bindings.cpp` against `../libresidfp-main` into `sidi-web/compiled/libresidfp.js`.
+
 TODO: Instructions on how to build JS module for bundling
 
 ## Limitations
@@ -76,5 +88,4 @@ Future versions will:
 - [SID reference](https://www.oxyron.de/html/registers_sid.html)
 - [MIDI CC list](https://anotherproducer.com/online-tools-for-musicians/midi-cc-list/)
 
-TODO: Move libresid up a level, consider submodule
 TODO: Add sensible defaults to sidi-web

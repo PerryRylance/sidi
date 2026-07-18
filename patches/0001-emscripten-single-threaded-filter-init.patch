@@ -1,0 +1,54 @@
+diff --git a/src/FilterModelConfig6581.cpp b/src/FilterModelConfig6581.cpp
+index 89eefe4..da13b6e 100644
+--- a/src/FilterModelConfig6581.cpp
++++ b/src/FilterModelConfig6581.cpp
+@@ -275,6 +275,14 @@ FilterModelConfig6581::FilterModelConfig6581() :
+         }
+     };
+ 
++#ifdef __EMSCRIPTEN__
++    filterSummer();
++    filterMixer();
++    filterGain();
++    filterResonance();
++    filterVcrVg();
++    filterVcrIds();
++#else
+ #ifdef HAVE_JTHREADS
+     using sidThread = std::jthread;
+ #else
+@@ -296,6 +304,8 @@ FilterModelConfig6581::FilterModelConfig6581() :
+     thdVcrVg.join();
+     thdVcrIds.join();
+ #endif
++#endif
++
+ }
+ 
+ uint16_t* FilterModelConfig6581::getDAC(double adjustment) const
+diff --git a/src/FilterModelConfig8580.cpp b/src/FilterModelConfig8580.cpp
+index 1dc4e63..7442ac6 100644
+--- a/src/FilterModelConfig8580.cpp
++++ b/src/FilterModelConfig8580.cpp
+@@ -193,6 +193,12 @@ FilterModelConfig8580::FilterModelConfig8580() :
+         buildResonanceTable(opampModel, resGain);
+     };
+ 
++#ifdef __EMSCRIPTEN__
++    filterSummer();
++    filterMixer();
++    filterGain();
++    filterResonance();
++#else
+ #ifdef HAVE_JTHREADS
+     using sidThread = std::jthread;
+ #else
+@@ -210,6 +216,8 @@ FilterModelConfig8580::FilterModelConfig8580() :
+     thdGain.join();
+     thdResonance.join();
+ #endif
++#endif
++
+ }
+ 
+ } // namespace reSIDfp

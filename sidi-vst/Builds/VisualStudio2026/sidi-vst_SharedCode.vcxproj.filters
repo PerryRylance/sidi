@@ -697,55 +697,55 @@
     <ClCompile Include="..\..\Source\SidChipAdapter.cpp">
       <Filter>sidi-vst\Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Dac.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Dac.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\EnvelopeGenerator.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\EnvelopeGenerator.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\ExternalFilter.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\ExternalFilter.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter6581.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter6581.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter8580.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter8580.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig6581.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig6581.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig8580.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig8580.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Integrator6581.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Integrator6581.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Integrator8580.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Integrator8580.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\OpAmp.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\OpAmp.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\SID.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\SID.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Spline.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\Spline.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\WaveformCalculator.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\WaveformCalculator.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\WaveformGenerator.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\WaveformGenerator.cpp">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\resample\SincResampler.cpp">
+    <ClCompile Include="..\..\..\libresidfp-main\src\resample\SincResampler.cpp">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
@@ -3726,82 +3726,82 @@
     <ClInclude Include="..\..\Source\MsvcCompat.h">
       <Filter>sidi-vst\Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Dac.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Dac.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\EnvelopeGenerator.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\EnvelopeGenerator.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\ExternalFilter.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\ExternalFilter.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter6581.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter6581.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter8580.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter8580.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig6581.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig6581.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig8580.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig8580.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator6581.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator6581.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator8580.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator8580.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\OpAmp.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\OpAmp.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\SID.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\SID.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Spline.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Spline.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Voice.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\Voice.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\WaveformCalculator.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\WaveformCalculator.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\WaveformGenerator.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\WaveformGenerator.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\array.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\array.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\siddefs-fp.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\siddefs-fp.h">
       <Filter>sidi-vst\reSIDfp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\Limiter.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\Limiter.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\PassThrough.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\PassThrough.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\Resampler.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\Resampler.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\SincResampler.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\SincResampler.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\TwoPassSincResampler.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\TwoPassSincResampler.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\ZeroOrderResampler.h">
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\ZeroOrderResampler.h">
       <Filter>sidi-vst\reSIDfp\resample</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">

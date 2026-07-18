@@ -5,6 +5,8 @@
 ### Compilation
 Your task is to compile a WASM build of libresidfp, to JS this must expose Module.SID class with bindings for the [methods on the SID class](https://libsidplayfp.github.io/libresidfp/html/classreSIDfp_1_1SID.html) provided by libresidfp, exposing the class methods via `EMSCRIPTEN_BINDINGS`.
 
+libresidfp's source lives in `libresidfp-main` at the repo root (a git submodule, shared with `sidi-vst`). Before building, run `node scripts/setup-libresidfp.js` from the repo root to apply the Emscripten-specific patch and generate the config headers. The embind wrapper is `agents/SID_bindings.cpp`; `npm run build:wasm` compiles it into `compiled/libresidfp.js`.
+
 First we are going to need a `ts-jest` test, this shall import our compiled WASM, then test that all the expected methods exist on the compiled SID class:
 
 - setChipModel

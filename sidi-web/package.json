@@ -1,6 +1,7 @@
 {
   "scripts": {
     "generate-demo-midis": "npx tsx scripts/generate-demo-midis.ts",
+    "build:wasm": "npx tsx scripts/build-wasm.ts",
     "test": "vitest run",
     "demo": "vite demo"
   },

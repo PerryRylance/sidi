@@ -1,0 +1,4 @@
+[submodule "libresidfp-main"]
+	path = libresidfp-main
+	url = https://github.com/libsidplayfp/libresidfp.git
+	ignore = dirty

@@ -67,7 +67,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../libresidfp-main/src;../../../libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_PROJUCER_VERSION=0x8000d;JUCE_MODULE_AVAILABLE_juce_audio_basics=1;JUCE_MODULE_AVAILABLE_juce_audio_devices=1;JUCE_MODULE_AVAILABLE_juce_audio_formats=1;JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1;JUCE_MODULE_AVAILABLE_juce_audio_processors=1;JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1;JUCE_MODULE_AVAILABLE_juce_audio_utils=1;JUCE_MODULE_AVAILABLE_juce_core=1;JUCE_MODULE_AVAILABLE_juce_data_structures=1;JUCE_MODULE_AVAILABLE_juce_events=1;JUCE_MODULE_AVAILABLE_juce_graphics=1;JUCE_MODULE_AVAILABLE_juce_gui_basics=1;JUCE_MODULE_AVAILABLE_juce_gui_extra=1;JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1;JUCE_VST3_CAN_REPLACE_VST2=0;JUCE_STRICT_REFCOUNTEDPOINTER=1;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=1;JucePlugin_Build_Unity=0;JucePlugin_Build_LV2=0;JucePlugin_Enable_IAA=0;JucePlugin_Enable_ARA=0;JucePlugin_Name=&quot;sidi-vst&quot;;JucePlugin_Desc=&quot;sidi-vst&quot;;JucePlugin_Manufacturer=&quot;perryrylance&quot;;JucePlugin_ManufacturerWebsite=&quot;https://perryrylance.dev&quot;;JucePlugin_ManufacturerEmail=&quot;contact@perryrylance.dev&quot;;JucePlugin_ManufacturerCode=0x4d616e75;JucePlugin_PluginCode=0x45767877;JucePlugin_IsSynth=1;JucePlugin_WantsMidiInput=1;JucePlugin_ProducesMidiOutput=0;JucePlugin_IsMidiEffect=0;JucePlugin_EditorRequiresKeyboardFocus=0;JucePlugin_Version=1.0.0;JucePlugin_VersionCode=0x10000;JucePlugin_VersionString=&quot;1.0.0&quot;;JucePlugin_VSTUniqueID=JucePlugin_PluginCode;JucePlugin_VSTCategory=kPlugCategSynth;JucePlugin_Vst3Category=&quot;Instrument|Synth&quot;;JucePlugin_AUMainType='aumu';JucePlugin_AUSubType=JucePlugin_PluginCode;JucePlugin_AUExportPrefix=sidivstAU;JucePlugin_AUExportPrefixQuoted=&quot;sidivstAU&quot;;JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_CFBundleIdentifier=com.perryrylance.sidivst;JucePlugin_AAXIdentifier=com.perryrylance.sidivst;JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_AAXProductId=JucePlugin_PluginCode;JucePlugin_AAXCategory=2048;JucePlugin_AAXDisableBypass=0;JucePlugin_AAXDisableMultiMono=0;JucePlugin_IAAType=0x61757269;JucePlugin_IAASubType=JucePlugin_PluginCode;JucePlugin_IAAName=&quot;perryrylance: sidi-vst&quot;;JucePlugin_VSTNumMidiInputs=16;JucePlugin_VSTNumMidiOutputs=16;JucePlugin_ARAContentTypes=0;JucePlugin_ARATransformationFlags=0;JucePlugin_ARAFactoryID=&quot;com.perryrylance.sidivst.factory&quot;;JucePlugin_ARADocumentArchiveID=&quot;com.perryrylance.sidivst.aradocumentarchive.1.0.0&quot;;JucePlugin_ARACompatibleArchiveIDs=&quot;&quot;;JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone;JUCER_VS2026_78A5042=1;JUCE_APP_VERSION=1.0.0;JUCE_APP_VERSION_HEX=0x10000;JUCE_SHARED_CODE=1;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -82,7 +82,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../libresidfp-main/src;../../../libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_PROJUCER_VERSION=0x8000d;JUCE_MODULE_AVAILABLE_juce_audio_basics=1;JUCE_MODULE_AVAILABLE_juce_audio_devices=1;JUCE_MODULE_AVAILABLE_juce_audio_formats=1;JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1;JUCE_MODULE_AVAILABLE_juce_audio_processors=1;JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1;JUCE_MODULE_AVAILABLE_juce_audio_utils=1;JUCE_MODULE_AVAILABLE_juce_core=1;JUCE_MODULE_AVAILABLE_juce_data_structures=1;JUCE_MODULE_AVAILABLE_juce_events=1;JUCE_MODULE_AVAILABLE_juce_graphics=1;JUCE_MODULE_AVAILABLE_juce_gui_basics=1;JUCE_MODULE_AVAILABLE_juce_gui_extra=1;JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1;JUCE_VST3_CAN_REPLACE_VST2=0;JUCE_STRICT_REFCOUNTEDPOINTER=1;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=1;JucePlugin_Build_Unity=0;JucePlugin_Build_LV2=0;JucePlugin_Enable_IAA=0;JucePlugin_Enable_ARA=0;JucePlugin_Name=\&quot;sidi-vst\&quot;;JucePlugin_Desc=\&quot;sidi-vst\&quot;;JucePlugin_Manufacturer=\&quot;perryrylance\&quot;;JucePlugin_ManufacturerWebsite=\&quot;https://perryrylance.dev\&quot;;JucePlugin_ManufacturerEmail=\&quot;contact@perryrylance.dev\&quot;;JucePlugin_ManufacturerCode=0x4d616e75;JucePlugin_PluginCode=0x45767877;JucePlugin_IsSynth=1;JucePlugin_WantsMidiInput=1;JucePlugin_ProducesMidiOutput=0;JucePlugin_IsMidiEffect=0;JucePlugin_EditorRequiresKeyboardFocus=0;JucePlugin_Version=1.0.0;JucePlugin_VersionCode=0x10000;JucePlugin_VersionString=\&quot;1.0.0\&quot;;JucePlugin_VSTUniqueID=JucePlugin_PluginCode;JucePlugin_VSTCategory=kPlugCategSynth;JucePlugin_Vst3Category=\&quot;Instrument|Synth\&quot;;JucePlugin_AUMainType='aumu';JucePlugin_AUSubType=JucePlugin_PluginCode;JucePlugin_AUExportPrefix=sidivstAU;JucePlugin_AUExportPrefixQuoted=\&quot;sidivstAU\&quot;;JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_CFBundleIdentifier=com.perryrylance.sidivst;JucePlugin_AAXIdentifier=com.perryrylance.sidivst;JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_AAXProductId=JucePlugin_PluginCode;JucePlugin_AAXCategory=2048;JucePlugin_AAXDisableBypass=0;JucePlugin_AAXDisableMultiMono=0;JucePlugin_IAAType=0x61757269;JucePlugin_IAASubType=JucePlugin_PluginCode;JucePlugin_IAAName=\&quot;perryrylance: sidi-vst\&quot;;JucePlugin_VSTNumMidiInputs=16;JucePlugin_VSTNumMidiOutputs=16;JucePlugin_ARAContentTypes=0;JucePlugin_ARATransformationFlags=0;JucePlugin_ARAFactoryID=\&quot;com.perryrylance.sidivst.factory\&quot;;JucePlugin_ARADocumentArchiveID=\&quot;com.perryrylance.sidivst.aradocumentarchive.1.0.0\&quot;;JucePlugin_ARACompatibleArchiveIDs=\&quot;\&quot;;JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone;JUCER_VS2026_78A5042=1;JUCE_APP_VERSION=1.0.0;JUCE_APP_VERSION_HEX=0x10000;JUCE_SHARED_CODE=1;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
@@ -110,7 +110,7 @@
     <ClCompile>
       <Optimization>Full</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../libresidfp-main/src;../../../libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_PROJUCER_VERSION=0x8000d;JUCE_MODULE_AVAILABLE_juce_audio_basics=1;JUCE_MODULE_AVAILABLE_juce_audio_devices=1;JUCE_MODULE_AVAILABLE_juce_audio_formats=1;JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1;JUCE_MODULE_AVAILABLE_juce_audio_processors=1;JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1;JUCE_MODULE_AVAILABLE_juce_audio_utils=1;JUCE_MODULE_AVAILABLE_juce_core=1;JUCE_MODULE_AVAILABLE_juce_data_structures=1;JUCE_MODULE_AVAILABLE_juce_events=1;JUCE_MODULE_AVAILABLE_juce_graphics=1;JUCE_MODULE_AVAILABLE_juce_gui_basics=1;JUCE_MODULE_AVAILABLE_juce_gui_extra=1;JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1;JUCE_VST3_CAN_REPLACE_VST2=0;JUCE_STRICT_REFCOUNTEDPOINTER=1;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=1;JucePlugin_Build_Unity=0;JucePlugin_Build_LV2=0;JucePlugin_Enable_IAA=0;JucePlugin_Enable_ARA=0;JucePlugin_Name=&quot;sidi-vst&quot;;JucePlugin_Desc=&quot;sidi-vst&quot;;JucePlugin_Manufacturer=&quot;perryrylance&quot;;JucePlugin_ManufacturerWebsite=&quot;https://perryrylance.dev&quot;;JucePlugin_ManufacturerEmail=&quot;contact@perryrylance.dev&quot;;JucePlugin_ManufacturerCode=0x4d616e75;JucePlugin_PluginCode=0x45767877;JucePlugin_IsSynth=1;JucePlugin_WantsMidiInput=1;JucePlugin_ProducesMidiOutput=0;JucePlugin_IsMidiEffect=0;JucePlugin_EditorRequiresKeyboardFocus=0;JucePlugin_Version=1.0.0;JucePlugin_VersionCode=0x10000;JucePlugin_VersionString=&quot;1.0.0&quot;;JucePlugin_VSTUniqueID=JucePlugin_PluginCode;JucePlugin_VSTCategory=kPlugCategSynth;JucePlugin_Vst3Category=&quot;Instrument|Synth&quot;;JucePlugin_AUMainType='aumu';JucePlugin_AUSubType=JucePlugin_PluginCode;JucePlugin_AUExportPrefix=sidivstAU;JucePlugin_AUExportPrefixQuoted=&quot;sidivstAU&quot;;JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_CFBundleIdentifier=com.perryrylance.sidivst;JucePlugin_AAXIdentifier=com.perryrylance.sidivst;JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_AAXProductId=JucePlugin_PluginCode;JucePlugin_AAXCategory=2048;JucePlugin_AAXDisableBypass=0;JucePlugin_AAXDisableMultiMono=0;JucePlugin_IAAType=0x61757269;JucePlugin_IAASubType=JucePlugin_PluginCode;JucePlugin_IAAName=&quot;perryrylance: sidi-vst&quot;;JucePlugin_VSTNumMidiInputs=16;JucePlugin_VSTNumMidiOutputs=16;JucePlugin_ARAContentTypes=0;JucePlugin_ARATransformationFlags=0;JucePlugin_ARAFactoryID=&quot;com.perryrylance.sidivst.factory&quot;;JucePlugin_ARADocumentArchiveID=&quot;com.perryrylance.sidivst.aradocumentarchive.1.0.0&quot;;JucePlugin_ARACompatibleArchiveIDs=&quot;&quot;;JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone;JUCER_VS2026_78A5042=1;JUCE_APP_VERSION=1.0.0;JUCE_APP_VERSION_HEX=0x10000;JUCE_SHARED_CODE=1;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -125,7 +125,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../sidi-web/libresidfp-main/src;../../../sidi-web/libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programming\Tools\JUCE\modules\juce_audio_processors_headless\format_types\VST3_SDK;..\..\JuceLibraryCode;D:\Programming\Tools\JUCE\modules;../../../libresidfp-main/src;../../../libresidfp-main/src/resample;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_PROJUCER_VERSION=0x8000d;JUCE_MODULE_AVAILABLE_juce_audio_basics=1;JUCE_MODULE_AVAILABLE_juce_audio_devices=1;JUCE_MODULE_AVAILABLE_juce_audio_formats=1;JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1;JUCE_MODULE_AVAILABLE_juce_audio_processors=1;JUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1;JUCE_MODULE_AVAILABLE_juce_audio_utils=1;JUCE_MODULE_AVAILABLE_juce_core=1;JUCE_MODULE_AVAILABLE_juce_data_structures=1;JUCE_MODULE_AVAILABLE_juce_events=1;JUCE_MODULE_AVAILABLE_juce_graphics=1;JUCE_MODULE_AVAILABLE_juce_gui_basics=1;JUCE_MODULE_AVAILABLE_juce_gui_extra=1;JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1;JUCE_VST3_CAN_REPLACE_VST2=0;JUCE_STRICT_REFCOUNTEDPOINTER=1;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=1;JucePlugin_Build_Unity=0;JucePlugin_Build_LV2=0;JucePlugin_Enable_IAA=0;JucePlugin_Enable_ARA=0;JucePlugin_Name=\&quot;sidi-vst\&quot;;JucePlugin_Desc=\&quot;sidi-vst\&quot;;JucePlugin_Manufacturer=\&quot;perryrylance\&quot;;JucePlugin_ManufacturerWebsite=\&quot;https://perryrylance.dev\&quot;;JucePlugin_ManufacturerEmail=\&quot;contact@perryrylance.dev\&quot;;JucePlugin_ManufacturerCode=0x4d616e75;JucePlugin_PluginCode=0x45767877;JucePlugin_IsSynth=1;JucePlugin_WantsMidiInput=1;JucePlugin_ProducesMidiOutput=0;JucePlugin_IsMidiEffect=0;JucePlugin_EditorRequiresKeyboardFocus=0;JucePlugin_Version=1.0.0;JucePlugin_VersionCode=0x10000;JucePlugin_VersionString=\&quot;1.0.0\&quot;;JucePlugin_VSTUniqueID=JucePlugin_PluginCode;JucePlugin_VSTCategory=kPlugCategSynth;JucePlugin_Vst3Category=\&quot;Instrument|Synth\&quot;;JucePlugin_AUMainType='aumu';JucePlugin_AUSubType=JucePlugin_PluginCode;JucePlugin_AUExportPrefix=sidivstAU;JucePlugin_AUExportPrefixQuoted=\&quot;sidivstAU\&quot;;JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_CFBundleIdentifier=com.perryrylance.sidivst;JucePlugin_AAXIdentifier=com.perryrylance.sidivst;JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode;JucePlugin_AAXProductId=JucePlugin_PluginCode;JucePlugin_AAXCategory=2048;JucePlugin_AAXDisableBypass=0;JucePlugin_AAXDisableMultiMono=0;JucePlugin_IAAType=0x61757269;JucePlugin_IAASubType=JucePlugin_PluginCode;JucePlugin_IAAName=\&quot;perryrylance: sidi-vst\&quot;;JucePlugin_VSTNumMidiInputs=16;JucePlugin_VSTNumMidiOutputs=16;JucePlugin_ARAContentTypes=0;JucePlugin_ARATransformationFlags=0;JucePlugin_ARAFactoryID=\&quot;com.perryrylance.sidivst.factory\&quot;;JucePlugin_ARADocumentArchiveID=\&quot;com.perryrylance.sidivst.aradocumentarchive.1.0.0\&quot;;JucePlugin_ARACompatibleArchiveIDs=\&quot;\&quot;;JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone;JUCER_VS2026_78A5042=1;JUCE_APP_VERSION=1.0.0;JUCE_APP_VERSION_HEX=0x10000;JUCE_SHARED_CODE=1;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
@@ -150,23 +150,23 @@
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\Source\MidiInterpreter.cpp"/>
     <ClCompile Include="..\..\Source\SidChipAdapter.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Dac.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\EnvelopeGenerator.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\ExternalFilter.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter6581.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Filter8580.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig6581.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig8580.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Integrator6581.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Integrator8580.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\OpAmp.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\SID.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\Spline.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\WaveformCalculator.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\WaveformGenerator.cpp"/>
-    <ClCompile Include="..\..\..\sidi-web\libresidfp-main\src\resample\SincResampler.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Dac.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\EnvelopeGenerator.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\ExternalFilter.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter6581.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Filter8580.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig6581.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\FilterModelConfig8580.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Integrator6581.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Integrator8580.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\OpAmp.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\SID.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\Spline.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\WaveformCalculator.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\WaveformGenerator.cpp"/>
+    <ClCompile Include="..\..\..\libresidfp-main\src\resample\SincResampler.cpp"/>
     <ClCompile Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -2947,32 +2947,32 @@
     <ClInclude Include="..\..\Source\ContinuousController.h"/>
     <ClInclude Include="..\..\Source\SidChipAdapter.h"/>
     <ClInclude Include="..\..\Source\MsvcCompat.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Dac.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\EnvelopeGenerator.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\ExternalFilter.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter6581.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Filter8580.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig6581.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\FilterModelConfig8580.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator6581.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Integrator8580.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\OpAmp.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\SID.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Spline.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\Voice.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\WaveformCalculator.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\WaveformGenerator.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\array.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\siddefs-fp.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\Limiter.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\PassThrough.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\Resampler.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\SincResampler.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\TwoPassSincResampler.h"/>
-    <ClInclude Include="..\..\..\sidi-web\libresidfp-main\src\resample\ZeroOrderResampler.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Dac.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\EnvelopeGenerator.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\ExternalFilter.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter6581.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Filter8580.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig6581.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\FilterModelConfig8580.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator6581.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Integrator8580.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\OpAmp.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\SID.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Spline.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\Voice.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\WaveformCalculator.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\WaveformGenerator.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\array.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\siddefs-fp.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\Limiter.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\PassThrough.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\Resampler.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\SincResampler.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\TwoPassSincResampler.h"/>
+    <ClInclude Include="..\..\..\libresidfp-main\src\resample\ZeroOrderResampler.h"/>
     <ClInclude Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>
     <ClInclude Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\buffers\juce_AudioChannelSet.h"/>
     <ClInclude Include="..\..\..\..\..\Tools\JUCE\modules\juce_audio_basics\buffers\juce_AudioDataConverters.h"/>
