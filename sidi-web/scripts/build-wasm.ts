@@ -50,6 +50,7 @@ function main() {
         "-s", "MODULARIZE=1",
         "-s", "EXPORT_NAME=Module",
         "-s", "ALLOW_MEMORY_GROWTH=1",
+        "-s", "SINGLE_FILE=1",
         "-o", OUTPUT_FILE,
     ];
 
