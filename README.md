@@ -81,6 +81,8 @@ TODO: Instructions on how to build JS module for bundling
 ## Planning
 Future versions will:
 
+- Add a sustain pedal to allow the pitch to change whilst keeping within a single envelope.
+- Add a reset oscillator CC so that all CR's can be reset, potentially with a bitmask for exclusions (eg pitch bend range).
 - Support MIDI 2.0 in order to expose the full granularity of the SID's internal registers.
 - Add a "free frequency" mode that will disregard MIDI note on events.
 
