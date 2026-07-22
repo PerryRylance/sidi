@@ -1,3 +1,5 @@
 node_modules/
 compiled/libresidfp.js
 rendered/*.wav
+dist/**/*.js
+dist/**/*.d.ts

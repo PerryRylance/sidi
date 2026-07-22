@@ -6,7 +6,7 @@ import { SIDModule } from "../compiled/libresidfp";
 import SidChipAdapter from "./SidChipAdapter";
 import Processor from "./Processor";
 
-interface SidiAudioWorkletProcessorOptions
+export interface SidiAudioWorkletProcessorOptions
 {
     processorOptions: {
         module: SIDModule;
