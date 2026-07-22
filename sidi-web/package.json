@@ -11,6 +11,7 @@
     "wav": "^1.0.2"
   },
   "devDependencies": {
+    "@types/audioworklet": "^0.0.100",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.3",
     "@types/wav": "^1.0.4",

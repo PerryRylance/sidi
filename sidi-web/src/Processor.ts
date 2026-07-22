@@ -33,7 +33,7 @@ export default class Processor
         return Math.round(deltaInSeconds * this.sampleRate);
     }
 
-    process(buffer: Int16Array, size?: number): number
+    process(buffer: Int16Array, size?: number, loop: boolean = false): number
     {
         if(!size)
             size = buffer.length;
@@ -87,7 +87,10 @@ export default class Processor
             else
                 this.interpreter.process(event);
 
-            this.nextEventIndex++;
+            if(loop)
+                this.nextEventIndex = (this.nextEventIndex + 1) % track.events.length;
+            else
+                this.nextEventIndex++;
         }
 
         return numSamplesWritten;
