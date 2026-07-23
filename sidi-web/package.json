@@ -5,7 +5,7 @@
     "build:worklet": "npx tsx scripts/build-worklet.ts",
     "render:midi": "npx tsx scripts/generate-wav.ts",
     "test": "vitest run",
-    "demo": "vite demo"
+    "demo": "vite"
   },
   "dependencies": {
     "@perry-rylance/midi": "^1.1.0",
@@ -16,7 +16,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.3",
     "@types/wav": "^1.0.4",
-    "assert": "^2.1.0",
     "happy-dom": "^20.10.3",
     "jest": "^30.4.2",
     "ts-jest": "^29.4.11",

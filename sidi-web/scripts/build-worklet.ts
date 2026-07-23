@@ -11,11 +11,6 @@ const OUT_FILE = "SidiAudioWorkletProcessor.js";
 async function buildScript() {
     await build({
         configFile: false,
-        resolve: {
-            alias: {
-                assert: require.resolve("assert"),
-            },
-        },
         build: {
             lib: {
                 entry: ENTRY,
@@ -26,6 +21,11 @@ async function buildScript() {
             outDir: OUT_DIR,
             emptyOutDir: false,
             minify: false,
+            rollupOptions: {
+                // NB: libresidfp.js has Node-only fallback paths (guarded by ENVIRONMENT_IS_NODE)
+                // that never run in the worklet, but the bundler still tries to resolve them.
+                external: ["fs", "path"],
+            },
         },
     });
 }

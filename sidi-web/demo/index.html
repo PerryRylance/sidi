@@ -2,8 +2,31 @@
 <html>
     <head>
         <title>SIDI - Demo</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Jersey+15&family=Press+Start+2P&display=swap" rel="stylesheet">
+        <style>
+        body
+        {
+            background-color: #6C5EB5;
+            color: #FFFFFF;
+
+            font-family: "Press Start 2P", system-ui;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        *
+        {
+            font-weight: 400;
+        }
+        </style>
     </head>
     <body>
-        
+        <h1>SIDI Web</h1>
+        <form>
+            <input type="file" accept="audio/midi" />
+        </form>
+        <script type="module" src="/src/Demo.ts"></script>
     </body>
 </html>

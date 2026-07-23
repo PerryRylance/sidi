@@ -2,14 +2,13 @@
 
 import { File } from "@perry-rylance/midi";
 import assertSingleTrack from "./assertions/assertSingleTrack";
-import { SIDModule } from "../compiled/libresidfp";
+import createSIDModule from "../compiled/libresidfp";
 import SidChipAdapter from "./SidChipAdapter";
 import Processor from "./Processor";
 
 export interface SidiAudioWorkletProcessorOptions
 {
     processorOptions: {
-        module: SIDModule;
         midi: File;
         loop?: boolean;
     };
@@ -17,21 +16,27 @@ export interface SidiAudioWorkletProcessorOptions
 
 class SidiAudioWorkletProcessor extends AudioWorkletProcessor
 {
-    private sid: SidChipAdapter;
-    private processor: Processor;
+    private processor?: Processor;
     private readonly loop: boolean;
+
+    // NB: Only ticks while the WASM module is still loading, to be synced to a loading animation later
+    private bufferedSampleCount: number = 0;
 
     constructor(options: SidiAudioWorkletProcessorOptions)
     {
         super();
 
-        const { module, midi, loop = false } = options.processorOptions;
+        const { midi, loop = false } = options.processorOptions;
 
         assertSingleTrack(midi);
 
         this.loop = loop;
-        this.sid = new SidChipAdapter(new module.SID());
-        this.processor = new Processor(this.sid, midi);
+
+        createSIDModule().then((module) =>
+        {
+            const sid = new SidChipAdapter(new module.SID());
+            this.processor = new Processor(sid, midi);
+        });
     }
 
     process(_inputList: Float32Array[][], outputList: Float32Array[][], _parameters: Record<string, Float32Array>): boolean
@@ -41,6 +46,12 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
 
         if(!channel)
             return true;
+
+        if(!this.processor)
+        {
+            this.bufferedSampleCount += channel.length;
+            return true;
+        }
 
         const buffer = new Int16Array(channel.length);
         const numSamplesWritten = this.processor.process(buffer, buffer.length, this.loop);

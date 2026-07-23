@@ -2,14 +2,24 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["es2022"],
+    "lib": [
+      "es2022",
+      "dom"
+    ],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "outDir": "./dist",
-    "types": ["jest", "node"]
+    "types": [
+      "jest",
+      "node"
+    ]
   },
-  "include": ["src/**/*", "compiled/**/*", "libresidfp.test.ts"]
+  "include": [
+    "src/**/*",
+    "compiled/**/*",
+    "libresidfp.test.ts"
+  ]
 }
