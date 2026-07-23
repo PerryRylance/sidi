@@ -9,7 +9,7 @@ import Processor from "./Processor";
 export interface SidiAudioWorkletProcessorOptions
 {
     processorOptions: {
-        midi: File;
+        midi: ArrayBuffer;
         loop?: boolean;
     };
 }
@@ -28,14 +28,20 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
 
         const { midi, loop = false } = options.processorOptions;
 
-        assertSingleTrack(midi);
+        // NB: processorOptions crosses into this worklet's own realm via structured clone, which
+        // strips class prototypes from anything passed as an already-parsed File/Event instance.
+        // Parse the raw bytes here instead, using this bundle's own copy of the midi classes, so
+        // instanceof checks downstream (Processor, MidiInterpreter) actually match.
+        const file = File.fromArrayBuffer(midi);
+
+        assertSingleTrack(file);
 
         this.loop = loop;
 
         createSIDModule().then((module) =>
         {
             const sid = new SidChipAdapter(new module.SID());
-            this.processor = new Processor(sid, midi);
+            this.processor = new Processor(sid, file);
         });
     }
 

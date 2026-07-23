@@ -1,5 +1,3 @@
-import { File } from "@perry-rylance/midi";
-
 const PROCESSOR_NAME = "sidi-audio-worklet-processor";
 const PROCESSOR_URL = "/SidiAudioWorkletProcessor.js";
 
@@ -30,7 +28,6 @@ input?.addEventListener("change", async () =>
         return;
 
     const arrayBuffer = await file.arrayBuffer();
-    const midi = File.fromArrayBuffer(arrayBuffer);
 
     console.log("Loaded MIDI file");
 
@@ -38,8 +35,8 @@ input?.addEventListener("change", async () =>
 
     const node = new AudioWorkletNode(context, PROCESSOR_NAME, {
         processorOptions: {
-            midi,
-            loop: false,
+            midi: arrayBuffer,
+            loop: true,
         },
     });
 

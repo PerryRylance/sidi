@@ -18,9 +18,25 @@ export default class MidiInterpreter
     private maxBendSemitones: Uint8Array = new Uint8Array([2, 2, 2]);
     private pitchBendAmount: Float32Array = new Float32Array(3);
 
-    constructor(private sid: SID, private clockFrequencyHz: number = Pal)
+    constructor(
+        private sid: SID,
+        private clockFrequencyHz: number = Pal,
+        initialControlRegister: number = 0,
+        initialSustainRelease: number = 0,
+    )
     {
         this.sid.setSamplingParameters(this.clockFrequencyHz, 0, this.pcmFrequencyHz);
+
+        // NB: Seed our shadow copies from explicit values rather than the chip itself - write-only
+        // SID registers share a single external data bus, so reading one back after some other,
+        // later register write (eg. SidChipAdapter's main volume write) returns that later write's
+        // value, not what's actually at the address being read. Callers wrapping an adapter that
+        // applies its own power-on defaults (eg. SidChipAdapter) should pass those values in here.
+        for (let channel = 0; channel < 3; channel++)
+        {
+            this.controlRegister[channel] = initialControlRegister;
+            this.sustainRelease[channel] = initialSustainRelease;
+        }
     }
 
     private getExtrapolatedBitValue(value: number, inBits: number, outBits: number)

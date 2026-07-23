@@ -12,6 +12,14 @@ import { SID, ChipModel, CombinedWaveforms, SamplingMethod } from "../compiled/l
  */
 export default class SidChipAdapter implements SID
 {
+    // NB: The only sensible defaults this adapter writes to the per-voice control (waveform/gate)
+    // and sustain/release registers. Exposed as constants rather than read back from the chip -
+    // write-only SID registers share a single external data bus, so reading one after writing a
+    // later, unrelated register (eg. main volume, written last in the constructor below) returns
+    // that later write's value, not what's actually "stored" at the address being read.
+    static readonly DEFAULT_CONTROL_REGISTER = 0x20; // NB: Saw waveform, gate off
+    static readonly DEFAULT_SUSTAIN_RELEASE = 0xF0; // NB: Full sustain, no release
+
     constructor(private sid: SID)
     {
         // NB: Zero everything first
@@ -20,8 +28,8 @@ export default class SidChipAdapter implements SID
 
         for (let i = 0; i < 3; i++)
         {
-            this.write((0x7 * i) + 0x4, 0x20); // NB: Default saw waveform
-            this.write((0x7 * i) + 0x6, 0xf0); // NB: Full sustain, no release
+            this.write((0x7 * i) + 0x4, SidChipAdapter.DEFAULT_CONTROL_REGISTER);
+            this.write((0x7 * i) + 0x6, SidChipAdapter.DEFAULT_SUSTAIN_RELEASE);
         }
 
         // NB: Full volume

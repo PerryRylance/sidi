@@ -1,7 +1,7 @@
 import { File, SetTempoEvent } from "@perry-rylance/midi";
-import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 import MidiInterpreter from "./MidiInterpreter";
+import SidChipAdapter from "./SidChipAdapter";
 import assertSingleTrack from "./assertions/assertSingleTrack";
 
 export default class Processor
@@ -11,9 +11,12 @@ export default class Processor
     private interpreter: MidiInterpreter;
     private nextEventIndex: number = 0;
     private accumulatedDeltaSamples: number = 0;
-    
+
     constructor(
-        private sid: SID,
+        // NB: Insists on SidChipAdapter, not the plain SID interface it also satisfies - so its
+        // known power-on defaults (see SidChipAdapter.DEFAULT_*) can be passed to MidiInterpreter
+        // explicitly, rather than guessed at via the chip's own unreliable read() (see SidChipAdapter).
+        private sid: SidChipAdapter,
         private midi: File,
         private sampleRate: number = 44100,
         private clockFrequencyHz: number = Pal,
@@ -21,7 +24,12 @@ export default class Processor
     {
         assertSingleTrack(midi);
 
-        this.interpreter = new MidiInterpreter(this.sid, this.clockFrequencyHz);
+        this.interpreter = new MidiInterpreter(
+            this.sid,
+            this.clockFrequencyHz,
+            SidChipAdapter.DEFAULT_CONTROL_REGISTER,
+            SidChipAdapter.DEFAULT_SUSTAIN_RELEASE,
+        );
     }
 
     private getNumSamplesFromDelta(delta: number): number
@@ -50,6 +58,13 @@ export default class Processor
 
         while(this.nextEventIndex < track.events.length)
         {
+            // NB: Once the buffer is exactly full, stop - don't fall through to processing (and
+            // timing-skipping) further events. With loop=false this was masked by nextEventIndex
+            // eventually exceeding track.events.length; with loop=true nextEventIndex only ever
+            // wraps via modulo, so without this check the loop never terminates.
+            if(numSamplesWritten >= size)
+                break;
+
             const event = track.events[this.nextEventIndex];
             const remainingDeltaSamples = this.getNumSamplesFromDelta(event.delta) - this.accumulatedDeltaSamples;
             const remainingBufferSamples = size - numSamplesWritten;
