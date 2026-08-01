@@ -4,9 +4,7 @@ import path from "path";
 import { File } from "@perry-rylance/midi";
 import createSIDModule from "../compiled/libresidfp";
 import Processor from "../src/Processor";
-import LoggingSID from "../src/LoggingSID";
 import SidChipAdapter from "../src/SidChipAdapter";
-import assertSingleTrack from "../src/assertions/assertSingleTrack";
 import { FileWriter } from "wav";
 
 async function main() {
@@ -26,7 +24,7 @@ async function main() {
     const arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
     const midi = File.fromArrayBuffer(arrayBuffer);
 
-    assertSingleTrack(midi);
+    midi.tracks.flatten();
 
     const module = await createSIDModule();
     const sid = new SidChipAdapter(new module.SID());

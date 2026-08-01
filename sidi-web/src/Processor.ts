@@ -2,7 +2,6 @@ import { File, SetTempoEvent } from "@perry-rylance/midi";
 import { Pal } from "./ClockFrequencyHz";
 import MidiInterpreter from "./MidiInterpreter";
 import SidChipAdapter from "./SidChipAdapter";
-import assertSingleTrack from "./assertions/assertSingleTrack";
 
 export default class Processor
 {
@@ -22,7 +21,8 @@ export default class Processor
         private clockFrequencyHz: number = Pal,
     )
     {
-        assertSingleTrack(midi);
+        if(midi.tracks.length !== 1)
+            throw new Error("Expected only 1 track");
 
         this.interpreter = new MidiInterpreter(
             this.sid,

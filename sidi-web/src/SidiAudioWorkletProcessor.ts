@@ -1,7 +1,6 @@
 /// <reference types="audioworklet" />
 
 import { File } from "@perry-rylance/midi";
-import assertSingleTrack from "./assertions/assertSingleTrack";
 import createSIDModule from "../compiled/libresidfp";
 import SidChipAdapter from "./SidChipAdapter";
 import Processor from "./Processor";
@@ -27,14 +26,7 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
         super();
 
         const { midi, loop = false } = options.processorOptions;
-
-        // NB: processorOptions crosses into this worklet's own realm via structured clone, which
-        // strips class prototypes from anything passed as an already-parsed File/Event instance.
-        // Parse the raw bytes here instead, using this bundle's own copy of the midi classes, so
-        // instanceof checks downstream (Processor, MidiInterpreter) actually match.
         const file = File.fromArrayBuffer(midi);
-
-        assertSingleTrack(file);
 
         this.loop = loop;
 
