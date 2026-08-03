@@ -18,6 +18,8 @@ public:
             testNoteOnThenOffTurnsGateOff (channel);
             testOverlappingNotesKeepGateOnUntilLastKeyReleased (channel);
             testReleasingLastPressedKeyTurnsGateOff (channel);
+            testNoteOnWhileGateAlreadyOnForcesRetrigger (channel);
+            testNoteOnWhileGateAlreadyOffWritesOnce (channel);
         }
     }
 
@@ -85,6 +87,58 @@ private:
         interpreter.process (juce::MidiMessage::noteOff (channel + 1, 64)); // Release Note B (the last pressed note)
 
         expectEquals (sid.registers[(size_t) address] & 0x01, 0x00); // Gate should now be OFF
+    }
+
+    void testNoteOnWhileGateAlreadyOnForcesRetrigger (int channel)
+    {
+        beginTest ("note on while the GATE bit is already ON forces a retrigger (OFF then ON), channel "
+                   + juce::String (channel));
+
+        FakeSidChip sid;
+        MidiInterpreter interpreter (sid);
+
+        const int address = channel * 7 + 4;
+
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127)); // GATE 0 -> 1
+
+        sid.writeLog.clear(); // isolate the writes made by the second note on
+
+        // A second hit on the same voice with no note off in between - eg. two drum
+        // hits sharing one oscillator, as is standard chiptune practice.
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 64, (juce::uint8) 127));
+
+        std::vector<uint8_t> gateBits;
+        for (auto& write : sid.writeLog)
+            if (write.offset == address)
+                gateBits.push_back ((uint8_t) (write.value & 0x01));
+
+        expectEquals ((int) gateBits.size(), 2);
+        if (gateBits.size() == 2)
+        {
+            expectEquals ((int) gateBits[0], 0);
+            expectEquals ((int) gateBits[1], 1);
+        }
+    }
+
+    void testNoteOnWhileGateAlreadyOffWritesOnce (int channel)
+    {
+        beginTest ("note on while the GATE bit is already OFF writes it just once, channel "
+                   + juce::String (channel));
+
+        FakeSidChip sid;
+        MidiInterpreter interpreter (sid);
+
+        const int address = channel * 7 + 4;
+
+        interpreter.process (juce::MidiMessage::noteOn (channel + 1, 60, (juce::uint8) 127));
+
+        int gateWriteCount = 0;
+        for (auto& write : sid.writeLog)
+            if (write.offset == address)
+                ++gateWriteCount;
+
+        expectEquals (gateWriteCount, 1);
+        expectEquals (sid.registers[(size_t) address] & 0x01, 0x01);
     }
 };
 

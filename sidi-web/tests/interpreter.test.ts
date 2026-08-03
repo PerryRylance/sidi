@@ -8,10 +8,11 @@ function mockSID(sid: any) {
     const writtenRegisters = new Map<number, number>();
     const originalWrite = sid.write.bind(sid);
     const originalRead = sid.read.bind(sid);
-    
+
     // NB: In a real SID chip (and  libresidfp ), the frequency registers are write-only. Reading them returns the last value on the data bus ( busValue ), meaning a sequence of reads back-to-back will return the same last written value. In other words, only the last written value (0x11) would be present on the data bus when running this test.
     sid.write = (offset: number, value: number) => {
         writtenRegisters.set(offset, value);
+        sid.writeLog.push({ offset, value });
         originalWrite(offset, value);
     };
     sid.read = (offset: number) => {
@@ -20,6 +21,11 @@ function mockSID(sid: any) {
         }
         return originalRead(offset);
     };
+
+    // NB: Unlike writtenRegisters above, this isn't collapsed down to the latest value per
+    // address - it's needed to assert on intermediate writes (eg. a forced GATE off/on pulse)
+    // that a final-value-only read can't distinguish from a single write.
+    sid.writeLog = [] as Array<{ offset: number, value: number }>;
 
     return sid;
 }
@@ -267,6 +273,46 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
             interpreter.process(noteOffB);
 
             expect(sid.read(address) & 0x01).toBe(0x00); // Gate should now be OFF
+        });
+
+        test('interpreting a note on while the GATE bit is already ON forces a retrigger (OFF then ON), not a no-op write', () => {
+            const sid = mockSID(new module.SID());
+            const interpreter = new MidiInterpreter(sid);
+            const address = channel * 7 + 4;
+
+            const noteOnA = new NoteOnEvent(0, channel);
+            noteOnA.key = 60;
+            interpreter.process(noteOnA); // GATE 0 -> 1
+
+            sid.writeLog.length = 0; // isolate the writes made by the second note on
+
+            // A second hit on the same voice with no note off in between - eg. two
+            // drum hits sharing one oscillator, as is standard chiptune practice.
+            const noteOnB = new NoteOnEvent(0, channel);
+            noteOnB.key = 64;
+            interpreter.process(noteOnB);
+
+            const gateBits = sid.writeLog
+                .filter((w: { offset: number, value: number }) => w.offset === address)
+                .map((w: { offset: number, value: number }) => w.value & 0x01);
+
+            // Must observe a genuine 1 -> 0 -> 1 edge, not just settle on 1
+            expect(gateBits).toEqual([0, 1]);
+        });
+
+        test('interpreting a note on while the GATE bit is already OFF writes it just once', () => {
+            const sid = mockSID(new module.SID());
+            const interpreter = new MidiInterpreter(sid);
+            const address = channel * 7 + 4;
+
+            const noteOn = new NoteOnEvent(0, channel);
+            noteOn.key = 60;
+            interpreter.process(noteOn);
+
+            const gateWrites = sid.writeLog.filter((w: { offset: number, value: number }) => w.offset === address);
+
+            expect(gateWrites.length).toBe(1);
+            expect(gateWrites[0].value & 0x01).toBe(1);
         });
 
     });

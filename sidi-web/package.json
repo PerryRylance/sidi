@@ -4,6 +4,7 @@
     "build:wasm": "npx tsx scripts/build-wasm.ts",
     "build:worklet": "npx tsx scripts/build-worklet.ts",
     "render:midi": "npx tsx scripts/generate-wav.ts",
+    "listen:midi": "npx tsx scripts/listen.ts",
     "test": "vitest run",
     "demo": "vite"
   },

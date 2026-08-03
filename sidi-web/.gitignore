@@ -3,3 +3,5 @@ compiled/libresidfp.js
 rendered/*.wav
 dist/**/*.js
 dist/**/*.d.ts
+scratch/*.ts
+!scratch/c-major.ts

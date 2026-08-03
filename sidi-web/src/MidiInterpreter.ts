@@ -76,6 +76,17 @@ export default class MidiInterpreter
         this.updateFrequency(event.channel);
 
         const offset = event.channel * 7;
+
+        // NB: The envelope generator only (re)starts on a 0->1 GATE transition (see
+        // reSIDfp's EnvelopeGenerator::writeCONTROL_REG). When several percussive hits
+        // share one voice - the classic C64 trick of keeping one oscillator free for
+        // drums - a new hit can arrive before the previous one's note off, leaving GATE
+        // already high; writing 1 again would be a no-op at the chip level and the hit
+        // would silently fail to retrigger. Forcing GATE low first guarantees a real
+        // edge every time, regardless of what the incoming note on/off pairing did.
+        if (this.controlRegister[event.channel] & 0x01)
+            this.sid.write(offset + 4, this.controlRegister[event.channel] & ~0x01);
+
         this.controlRegister[event.channel] |= 0x01;
         this.sid.write(offset + 4, this.controlRegister[event.channel]);
     }
