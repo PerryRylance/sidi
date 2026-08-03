@@ -17,6 +17,13 @@ public:
     // NB: SID registers span 0x00-0x18 (25 registers)
     static constexpr int numRegisters = 0x19;
 
+    // NB: Mirrors sidi-web/src/SidChipAdapter.ts's DEFAULT_CONTROL_REGISTER/
+    // DEFAULT_SUSTAIN_RELEASE - the real chip's power-on state, passed to
+    // MidiInterpreter explicitly so its shadow registers agree with what's
+    // actually on the chip (see MidiInterpreter's constructor).
+    static constexpr uint8_t DEFAULT_CONTROL_REGISTER = 0x20; // NB: Saw waveform, gate off
+    static constexpr uint8_t DEFAULT_SUSTAIN_RELEASE = 0xF0;  // NB: Full sustain, no release
+
     explicit SidChipAdapter (reSIDfp::SID& sidChip);
 
     void write (int offset, uint8_t value) override;

@@ -19,9 +19,14 @@ namespace
     }
 }
 
-MidiInterpreter::MidiInterpreter (ISidChip& sidChip)
+MidiInterpreter::MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister, uint8_t initialSustainRelease)
     : sid (sidChip)
 {
+    for (int channel = 0; channel < 3; ++channel)
+    {
+        controlRegister[(size_t) channel] = initialControlRegister;
+        sustainRelease[(size_t) channel] = initialSustainRelease;
+    }
 }
 
 void MidiInterpreter::process (const juce::MidiMessage& message)

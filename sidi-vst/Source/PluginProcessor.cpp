@@ -99,7 +99,9 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     sid->setSamplingParameters (985248.0, reSIDfp::RESAMPLE, sampleRate); // NB: PAL clock, see sidi-web/src/ClockFrequencyHz.ts
 
     sidChipAdapter = std::make_unique<SidChipAdapter> (*sid);
-    midiInterpreter = std::make_unique<MidiInterpreter> (*sidChipAdapter);
+    midiInterpreter = std::make_unique<MidiInterpreter> (*sidChipAdapter,
+                                                           SidChipAdapter::DEFAULT_CONTROL_REGISTER,
+                                                           SidChipAdapter::DEFAULT_SUSTAIN_RELEASE);
 
     sidOutputBuffer.resize ((size_t) samplesPerBlock);
 }

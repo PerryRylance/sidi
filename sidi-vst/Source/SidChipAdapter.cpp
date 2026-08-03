@@ -10,8 +10,8 @@ SidChipAdapter::SidChipAdapter (reSIDfp::SID& sidChip)
 
     for (int i = 0; i < 3; ++i)
     {
-        write ((0x7 * i) + 0x4, 0x20); // NB: Default saw waveform
-        write ((0x7 * i) + 0x6, 0xf0); // NB: Full sustain, no release
+        write ((0x7 * i) + 0x4, DEFAULT_CONTROL_REGISTER);
+        write ((0x7 * i) + 0x6, DEFAULT_SUSTAIN_RELEASE);
     }
 
     // NB: Full volume

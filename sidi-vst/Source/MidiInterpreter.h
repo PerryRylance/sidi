@@ -19,7 +19,11 @@
 class MidiInterpreter
 {
 public:
-    explicit MidiInterpreter (ISidChip& sidChip);
+    // NB: initialControlRegister/initialSustainRelease should be the real chip's power-on
+    // defaults (see SidChipAdapter::DEFAULT_CONTROL_REGISTER/DEFAULT_SUSTAIN_RELEASE) - write-only
+    // SID registers can't be read back reliably, so these shadow copies must be seeded explicitly
+    // by the caller rather than assumed here. Mirrors sidi-web/src/MidiInterpreter.ts's constructor.
+    explicit MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister = 0, uint8_t initialSustainRelease = 0);
 
     void process (const juce::MidiMessage& message);
 
@@ -45,8 +49,8 @@ private:
     double clockFrequencyHz = 985248.0; // NB: PAL clock, see sidi-web/src/ClockFrequencyHz.ts
 
     std::array<uint8_t, 3> attackDecay {};
-    std::array<uint8_t, 3> sustainRelease { 0xF0, 0xF0, 0xF0 }; // NB: Full sustain, no release - mirrors SidChipAdapter's hardware default
-    std::array<uint8_t, 3> controlRegister { 0x20, 0x20, 0x20 }; // NB: Default saw waveform
+    std::array<uint8_t, 3> sustainRelease {};
+    std::array<uint8_t, 3> controlRegister {};
     std::array<std::atomic<int>, 3> lastPressedKey { -1, -1, -1 };
     uint8_t filterResonanceSelect = 0;
     uint8_t filterModeVolumeSelect = 0;
