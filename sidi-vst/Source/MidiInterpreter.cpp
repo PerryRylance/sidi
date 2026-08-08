@@ -31,6 +31,14 @@ MidiInterpreter::MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegis
 
 void MidiInterpreter::process (const juce::MidiMessage& message)
 {
+    // NB: Only 3 oscillators exist (see MidiInterpreter.h's class comment). Every
+    // process*() below indexes fixed-size 3-element arrays by channel with no further
+    // checking, so a message on channel 4+ must be rejected here rather than there -
+    // std::array::operator[] doesn't bounds-check, so letting one through is UB, not
+    // a no-op.
+    if (message.getChannel() - 1 >= 3)
+        return;
+
     if (message.isController())
         processController (message);
     else if (message.isNoteOn())

@@ -74,6 +74,9 @@ export default class MidiInterpreter
 
     private processNoteOn(event: NoteOnEvent): void
     {
+        if(event.channel > 2)
+            return;
+
         this.lastPressedKey[event.channel] = event.key;
         this.updateFrequency(event.channel);
 
@@ -95,12 +98,18 @@ export default class MidiInterpreter
 
     private processPitchWheel(event: PitchWheelEvent): void
     {
+        if(event.channel > 2)
+            return;
+
         this.pitchBendAmount[event.channel] = event.amount;
         this.updateFrequency(event.channel);
     }
 
     private processNoteOff(event: NoteOffEvent): void
     {
+        if(event.channel > 2)
+            return;
+
         if (this.lastPressedKey[event.channel] === event.key)
         {
             const offset = event.channel * 7;
@@ -168,6 +177,8 @@ export default class MidiInterpreter
             }
 
             case PulseWidth:
+                if(event.channel > 2) return;
+
                 // NB: Pulse width modulation
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 12);
                 const offset = event.channel * 7 + 2;
@@ -183,6 +194,8 @@ export default class MidiInterpreter
             case Decay:
             case Sustain:
             case Release: {
+                if(event.channel > 2) return;
+
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 4);
                 const config: Record<number, { array: Uint8Array, shift: number, mask: number, regOffset: number }> = {
                     [Attack]:  { array: this.attackDecay,       shift: 4, mask: 0x0F, regOffset: 5 },
@@ -208,6 +221,8 @@ export default class MidiInterpreter
             case Sync:
             case Ring:
             case Test: {
+                if(event.channel > 2) return;
+
                 const on = event.value >= 64;
                 const maskMap: Record<number, number> = {
                     [Gate]:  0x01,
@@ -229,14 +244,17 @@ export default class MidiInterpreter
                 break;
             }
             case 101: // RPN MSB Selection
+                if(event.channel > 2) return;
                 this.rpnMsb[event.channel] = event.value;
                 break;
 
             case 100: // RPN LSB Selection
+                if(event.channel > 2) return;
                 this.rpnLsb[event.channel] = event.value;
                 break;
 
             case 6: // Data Entry MSB (Sets the value of the selected RPN)
+                if(event.channel > 2) return;
                 if (this.rpnMsb[event.channel] === 0 && this.rpnLsb[event.channel] === 0) {
                     this.maxBendSemitones[event.channel] = event.value;
                 }
