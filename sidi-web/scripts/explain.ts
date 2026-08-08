@@ -117,7 +117,7 @@ async function main() {
 
             table.addRow({
                 "ΔT": event.delta,
-                chan: event.channel,
+                chan: event.channel + 1,
                 type,
                 desc,
                 value
