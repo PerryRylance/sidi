@@ -1,7 +1,9 @@
 import { Event, ControlEvent, MetaEvent, NoteOnEvent, NoteOffEvent, ControllerEvent, SysExEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
-import { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "./ContinuousController";
+import ContinuousController from "./ContinuousController";
+
+const { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } = ContinuousController;
 
 export default class MidiInterpreter
 {

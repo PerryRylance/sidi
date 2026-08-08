@@ -1,28 +1,32 @@
-export const PulseWidth = 75;
+const ContinuousController = {
+    PulseWidth: 75,
 
-export const Attack = 76;
-export const Decay = 77;
-export const Sustain = 78;
-export const Release = 79;
+    Attack: 76,
+    Decay: 77,
+    Sustain: 78,
+    Release: 79,
 
-export const Tri = 80;
-export const Saw = 81;
-export const Pulse = 82;
-export const Noise = 83;
+    Tri: 80,
+    Saw: 81,
+    Pulse: 82,
+    Noise: 83,
 
-export const Gate = 84;
-export const Sync = 85;
-export const Ring = 86;
-export const Test = 87;
+    Gate: 84,
+    Sync: 85,
+    Ring: 86,
+    Test: 87,
 
-export const FilterCutoff = 74;
-export const FilterResonance = 71;
-export const FilterEnable = 88;
+    FilterCutoff: 74,
+    FilterResonance: 71,
+    FilterEnable: 88,
 
-export const FilterLowPass = 89;
-export const FilterBandPass = 90;
-export const FilterHighPass = 91;
+    FilterLowPass: 89,
+    FilterBandPass: 90,
+    FilterHighPass: 91,
 
-export const Oscillator3Mute = 92;
+    Oscillator3Mute: 92,
 
-export const MainVolume = 7;
+    MainVolume: 7,
+} as const;
+
+export default ContinuousController;

@@ -2,7 +2,9 @@ import { beforeAll, describe, expect, test } from "vitest";
 import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, NoteOffEvent, ControllerEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import MidiInterpreter from "../src/MidiInterpreter";
-import { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } from "../src/ContinuousController";
+import ContinuousController from "../src/ContinuousController";
+
+const { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } = ContinuousController;
 
 function mockSID(sid: any) {
     const writtenRegisters = new Map<number, number>();

@@ -1,33 +1,18 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { pathToFileURL } from "url";
+
 import { ChildProcess, execFileSync, spawn } from "child_process";
 
-import { File } from "@perry-rylance/midi";
 import { FileWriter } from "wav";
 import createSIDModule from "../compiled/libresidfp";
 import Processor from "../src/Processor";
 import SidChipAdapter from "../src/SidChipAdapter";
+import loadMidiFile from "./load-midi-file";
 
 const SAMPLE_RATE = 44100;
 const BUFFER_SIZE = 4096;
 const CHUNK_SAMPLES = SAMPLE_RATE * 10;
-
-async function loadMidiFile(filename: string): Promise<File> {
-    const absolutePath = path.resolve(filename);
-
-    if (!fs.existsSync(absolutePath))
-        throw new Error(`File not found: ${absolutePath}`);
-
-    const imported = await import(pathToFileURL(absolutePath).href);
-    const midi = await imported.default;
-
-    if (!(midi instanceof File))
-        throw new Error(`${absolutePath} must have a default export of type File, from @perry-rylance/midi`);
-
-    return midi;
-}
 
 // NB: Render one chunk at a time rather than the whole track, so this supports scripts that
 // generate indefinitely - only ever one chunk sits in memory/on disk ahead of playback.
@@ -97,7 +82,7 @@ function playWav(filePath: string, onSpawned: (child: ChildProcess) => void): Pr
 async function main() {
     const filename = process.argv[2];
     if (!filename) {
-        console.error("Usage: npm run listen:midi -- <midi-provider-file.ts>");
+        console.error("Usage: npm run listen:midi -- <file.ts|.mid>");
         process.exit(1);
     }
 
