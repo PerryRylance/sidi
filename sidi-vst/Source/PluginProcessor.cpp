@@ -10,6 +10,37 @@
 #include "PluginEditor.h"
 #include "SID.h"
 
+namespace
+{
+    // NB: Dumps the message exactly as received, ahead of any interpretation (and
+    // ahead of MidiInterpreter's own channel-range guard) - the point of this log is
+    // to see what actually arrived from the host, not what the interpreter made of it.
+    juce::String formatMidiMessageForLog (const juce::MidiMessage& message, int samplePosition)
+    {
+        juce::String raw;
+        for (int i = 0; i < message.getRawDataSize(); ++i)
+            raw << juce::String::formatted ("%02X ", (unsigned) message.getRawData()[i]);
+
+        juce::String description;
+
+        if (message.isNoteOn())
+            description << "NoteOn ch=" << message.getChannel() << " note=" << message.getNoteNumber() << " vel=" << (int) message.getVelocity();
+        else if (message.isNoteOff())
+            description << "NoteOff ch=" << message.getChannel() << " note=" << message.getNoteNumber() << " vel=" << (int) message.getVelocity();
+        else if (message.isController())
+            description << "CC ch=" << message.getChannel() << " cc=" << message.getControllerNumber() << " val=" << message.getControllerValue();
+        else if (message.isPitchWheel())
+            description << "PitchWheel ch=" << message.getChannel() << " val=" << message.getPitchWheelValue();
+        else
+            description << message.getDescription();
+
+        return juce::String::formatted ("sample=%6d  raw=[%s]  %s",
+                                         samplePosition,
+                                         raw.trim().toRawUTF8(),
+                                         description.toRawUTF8());
+    }
+}
+
 //==============================================================================
 NewProjectAudioProcessor::NewProjectAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -160,6 +191,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             currentSample += delta;
         }
 
+        midiLog.add (formatMidiMessageForLog (metadata.getMessage(), metadata.samplePosition));
         midiInterpreter->process (metadata.getMessage());
     }
 

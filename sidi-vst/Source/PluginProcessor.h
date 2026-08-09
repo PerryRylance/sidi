@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "MidiInterpreter.h"
 #include "SidChipAdapter.h"
+#include "MidiLog.h"
 #include <memory>
 #include <vector>
 
@@ -65,6 +66,11 @@ public:
     const SidChipAdapter* getSidChipAdapter() const noexcept { return sidChipAdapter.get(); }
     const MidiInterpreter* getMidiInterpreter() const noexcept { return midiInterpreter.get(); }
 
+    // NB: Unlike the members above, the log outlives prepareToPlay/releaseResources
+    // cycles - it's diagnostic history, not chip state, so a plugin reload shouldn't
+    // wipe it out from under the Log tab.
+    const MidiLog& getMidiLog() const noexcept { return midiLog; }
+
 private:
     //==============================================================================
     void writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite);
@@ -73,6 +79,7 @@ private:
     std::unique_ptr<SidChipAdapter> sidChipAdapter;
     std::unique_ptr<MidiInterpreter> midiInterpreter;
     std::vector<int16_t> sidOutputBuffer;
+    MidiLog midiLog;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
 };

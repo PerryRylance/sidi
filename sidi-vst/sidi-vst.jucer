@@ -13,6 +13,13 @@
       <FILE id="GIH9JH" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="MCSLbi" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="sp1StCp" name="StatePanel.cpp" compile="1" resource="0"
+            file="Source/StatePanel.cpp"/>
+      <FILE id="sp2StHd" name="StatePanel.h" compile="0" resource="0" file="Source/StatePanel.h"/>
+      <FILE id="lp1LgCp" name="LogPanel.cpp" compile="1" resource="0"
+            file="Source/LogPanel.cpp"/>
+      <FILE id="lp2LgHd" name="LogPanel.h" compile="0" resource="0" file="Source/LogPanel.h"/>
+      <FILE id="ml1MlHd" name="MidiLog.h" compile="0" resource="0" file="Source/MidiLog.h"/>
       <FILE id="a1B2c3" name="MidiInterpreter.cpp" compile="1" resource="0"
             file="Source/MidiInterpreter.cpp"/>
       <FILE id="d4E5f6" name="MidiInterpreter.h" compile="0" resource="0"

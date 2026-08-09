@@ -148,6 +148,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
     <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
+    <ClCompile Include="..\..\Source\StatePanel.cpp"/>
+    <ClCompile Include="..\..\Source\LogPanel.cpp"/>
     <ClCompile Include="..\..\Source\MidiInterpreter.cpp"/>
     <ClCompile Include="..\..\Source\SidChipAdapter.cpp"/>
     <ClCompile Include="..\..\..\libresidfp-main\src\Dac.cpp"/>
@@ -2942,6 +2944,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>
     <ClInclude Include="..\..\Source\PluginEditor.h"/>
+    <ClInclude Include="..\..\Source\StatePanel.h"/>
+    <ClInclude Include="..\..\Source\LogPanel.h"/>
+    <ClInclude Include="..\..\Source\MidiLog.h"/>
     <ClInclude Include="..\..\Source\MidiInterpreter.h"/>
     <ClInclude Include="..\..\Source\ISidChip.h"/>
     <ClInclude Include="..\..\Source\ContinuousController.h"/>

@@ -691,6 +691,12 @@
     <ClCompile Include="..\..\Source\PluginEditor.cpp">
       <Filter>sidi-vst\Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\StatePanel.cpp">
+      <Filter>sidi-vst\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LogPanel.cpp">
+      <Filter>sidi-vst\Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\MidiInterpreter.cpp">
       <Filter>sidi-vst\Source</Filter>
     </ClCompile>
@@ -3709,6 +3715,15 @@
       <Filter>sidi-vst\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>sidi-vst\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\StatePanel.h">
+      <Filter>sidi-vst\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\LogPanel.h">
+      <Filter>sidi-vst\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\MidiLog.h">
       <Filter>sidi-vst\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MidiInterpreter.h">
