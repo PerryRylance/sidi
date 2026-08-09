@@ -1,57 +1,72 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include <deque>
 #include <vector>
 
 /**
-    Fixed-capacity ring buffer of log lines, written from the audio thread
-    (PluginProcessor::processBlock) and read from the message thread (LogPanel).
+    Lock-free single-producer/single-consumer transport for log lines: written
+    from the audio thread (PluginProcessor::processBlock), drained from the
+    message thread (LogPanel's poll timer).
 
-    NB: Guarded with a CriticalSection rather than a lock-free queue. That's
-    normally the wrong call on the audio thread, but this is a diagnostic-only
-    path (one add() per incoming MIDI message, not per sample) and the lock is
-    only ever held for a deque push/pop or a short linear copy - an acceptable
-    trade for the simplicity here.
+    NB: This used to be a CriticalSection-guarded deque. That's the wrong call
+    on the audio thread - on Windows, the audio callback thread runs boosted
+    (MMCSS) priority, and a plain mutex shared with the normal-priority message
+    thread has no priority inheritance, so if the message thread gets preempted
+    mid-lock the audio thread's next add() can spin waiting on a lock the OS
+    never lets its holder run long enough to release. That's a real,
+    reproducible freeze the moment MIDI starts flowing (heard: audio keeps
+    playing off the audio thread; seen: the whole plugin/DAW UI locks up, since
+    it's the message thread - Timers, repaints, everything - that's starved).
+    AbstractFifo's read/write indices are atomics with no locking at all, so
+    there's nothing for the audio thread to ever block on here.
 */
 class MidiLog
 {
 public:
-    struct Entry
-    {
-        uint64_t sequence;
-        juce::String text;
-    };
+    // NB: Headroom for a burst of MIDI arriving between LogPanel's polls (4Hz) - this is
+    // "how many lines can be in flight before being drained", not "how many are displayed".
+    // The displayed cap (500, per the Log tab's spec) is enforced by the consumer (LogPanel).
+    static constexpr int fifoCapacity = 4096;
 
-    static constexpr size_t maxEntries = 500;
+    MidiLog() : fifo (fifoCapacity), buffer ((size_t) fifoCapacity) {}
 
+    // NB: Audio thread. Drops the line rather than blocking or growing if the consumer
+    // hasn't drained fast enough - acceptable for a diagnostic log, unacceptable would be
+    // stalling the audio callback to guarantee delivery.
     void add (const juce::String& text)
     {
-        const juce::ScopedLock lock (criticalSection);
+        int start1, size1, start2, size2;
+        fifo.prepareToWrite (1, start1, size1, start2, size2);
 
-        entries.push_back ({ nextSequence++, text });
+        if (size1 + size2 == 0)
+            return;
 
-        if (entries.size() > maxEntries)
-            entries.pop_front();
+        buffer[(size_t) (size1 > 0 ? start1 : start2)] = text;
+        fifo.finishedWrite (size1 + size2);
     }
 
-    // NB: Everything currently retained with sequence > afterSequence, oldest first.
-    // Pass 0 to get the full retained set (at most maxEntries, oldest already evicted).
-    std::vector<Entry> getEntriesAfter (uint64_t afterSequence) const
+    // NB: Message thread. Returns everything currently available, oldest first.
+    std::vector<juce::String> drain()
     {
-        const juce::ScopedLock lock (criticalSection);
+        std::vector<juce::String> result;
 
-        std::vector<Entry> result;
+        int start1, size1, start2, size2;
+        fifo.prepareToRead (fifo.getNumReady(), start1, size1, start2, size2);
 
-        for (const auto& entry : entries)
-            if (entry.sequence > afterSequence)
-                result.push_back (entry);
+        result.reserve ((size_t) (size1 + size2));
+
+        for (int i = 0; i < size1; ++i)
+            result.push_back (buffer[(size_t) (start1 + i)]);
+
+        for (int i = 0; i < size2; ++i)
+            result.push_back (buffer[(size_t) (start2 + i)]);
+
+        fifo.finishedRead (size1 + size2);
 
         return result;
     }
 
 private:
-    juce::CriticalSection criticalSection;
-    std::deque<Entry> entries;
-    uint64_t nextSequence = 1;
+    juce::AbstractFifo fifo;
+    std::vector<juce::String> buffer;
 };

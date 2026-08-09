@@ -68,8 +68,10 @@ public:
 
     // NB: Unlike the members above, the log outlives prepareToPlay/releaseResources
     // cycles - it's diagnostic history, not chip state, so a plugin reload shouldn't
-    // wipe it out from under the Log tab.
-    const MidiLog& getMidiLog() const noexcept { return midiLog; }
+    // wipe it out from under the Log tab. Non-const: MidiLog::drain() mutates the
+    // FIFO's read position (AbstractFifo::finishedRead isn't const), so LogPanel needs
+    // a mutable reference even though it's only ever reading log content, not chip state.
+    MidiLog& getMidiLog() noexcept { return midiLog; }
 
 private:
     //==============================================================================

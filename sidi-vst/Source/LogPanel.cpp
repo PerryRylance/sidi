@@ -38,23 +38,23 @@ void LogPanel::resized()
 
 void LogPanel::timerCallback()
 {
-    const auto newEntries = audioProcessor.getMidiLog().getEntriesAfter (lastSeenSequence);
+    auto drained = audioProcessor.getMidiLog().drain();
 
-    if (newEntries.empty())
+    if (drained.empty())
         return;
 
-    // NB: Full resync rather than incremental append - MidiLog's 500-entry cap can
-    // evict from the front between polls, and re-deriving the whole displayed text
-    // from the current retained set is simpler (if less scroll-friendly) than
-    // tracking and trimming leading lines out of the TextEditor by hand.
-    const auto allEntries = audioProcessor.getMidiLog().getEntriesAfter (0);
+    for (auto& line : drained)
+    {
+        displayedLines.push_back (std::move (line));
+
+        if (displayedLines.size() > maxDisplayedEntries)
+            displayedLines.pop_front();
+    }
 
     juce::String text;
-    for (const auto& entry : allEntries)
-        text << entry.text << "\n";
+    for (const auto& line : displayedLines)
+        text << line << "\n";
 
     textEditor.setText (text, false);
     textEditor.moveCaretToEnd();
-
-    lastSeenSequence = newEntries.back().sequence;
 }
