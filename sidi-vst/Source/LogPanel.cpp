@@ -43,18 +43,34 @@ void LogPanel::timerCallback()
     if (drained.empty())
         return;
 
-    for (auto& line : drained)
-    {
-        displayedLines.push_back (std::move (line));
+    // NB: Append only - a full setText() rebuild on every poll tick was the "insanely
+    // slow" bottleneck (was rebuilding up to 500 lines from scratch several times a
+    // second under real MIDI volume). insertTextAtCaret() only costs what's actually new.
+    juce::String toAppend;
 
-        if (displayedLines.size() > maxDisplayedEntries)
-            displayedLines.pop_front();
+    for (const auto& line : drained)
+    {
+        const juce::String withNewline = line + "\n";
+        toAppend << withNewline;
+        displayedLineLengths.push_back (withNewline.length());
     }
 
-    juce::String text;
-    for (const auto& line : displayedLines)
-        text << line << "\n";
-
-    textEditor.setText (text, false);
     textEditor.moveCaretToEnd();
+    textEditor.insertTextAtCaret (toAppend);
+
+    if (displayedLineLengths.size() > maxDisplayedEntries)
+    {
+        int charsToRemove = 0;
+
+        while (displayedLineLengths.size() > maxDisplayedEntries)
+        {
+            charsToRemove += displayedLineLengths.front();
+            displayedLineLengths.pop_front();
+        }
+
+        // NB: The only path that pays for a full rebuild - happens roughly once every
+        // maxDisplayedEntries new lines, not on every poll tick.
+        textEditor.setText (textEditor.getText().substring (charsToRemove), false);
+        textEditor.moveCaretToEnd();
+    }
 }

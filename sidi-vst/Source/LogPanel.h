@@ -28,7 +28,11 @@ private:
 
     NewProjectAudioProcessor& audioProcessor;
     juce::TextEditor textEditor;
-    std::deque<juce::String> displayedLines;
+
+    // NB: Length (including the trailing '\n') of each currently-displayed line, in
+    // display order - lets trimming remove exactly the right number of leading
+    // characters from the TextEditor without re-deriving anything from MidiLog.
+    std::deque<int> displayedLineLengths;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LogPanel)
 };

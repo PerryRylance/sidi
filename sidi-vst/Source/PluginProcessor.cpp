@@ -34,10 +34,12 @@ namespace
         else
             description << message.getDescription();
 
-        return juce::String::formatted ("sample=%6d  raw=[%s]  %s",
-                                         samplePosition,
-                                         raw.trim().toRawUTF8(),
-                                         description.toRawUTF8());
+        // NB: Deliberately not String::formatted("...%s...", someString.toRawUTF8()) here -
+        // passing a raw narrow char* into a %s placeholder is a known Windows footgun (the
+        // underlying formatting can disagree on narrow/wide encoding), and that's exactly what
+        // was producing garbled log text. Plain String concatenation has no such ambiguity.
+        return "sample=" + juce::String (samplePosition).paddedLeft (' ', 6)
+             + "  raw=[" + raw.trim() + "]  " + description;
     }
 }
 
