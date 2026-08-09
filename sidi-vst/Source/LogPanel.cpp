@@ -23,17 +23,34 @@ LogPanel::LogPanel (NewProjectAudioProcessor& processorToDisplay)
 
     addAndMakeVisible (textEditor);
 
-    startTimerHz (pollHz);
+    // NB: Deliberately not starting the timer here - a freshly-constructed Component's
+    // visibleFlag defaults to false (see juce::Component's ctor), so visibilityChanged()
+    // fires correctly the moment TabbedComponent actually shows this tab, whether or not
+    // it's the one selected first. Starting here too would just mean polling (for nothing,
+    // since MidiLog is inactive until then) before that first real transition.
 }
 
 LogPanel::~LogPanel()
 {
     stopTimer();
+    audioProcessor.getMidiLog().setActive (false);
 }
 
 void LogPanel::resized()
 {
     textEditor.setBounds (getLocalBounds().reduced (6));
+}
+
+void LogPanel::visibilityChanged()
+{
+    const bool visible = isVisible();
+
+    audioProcessor.getMidiLog().setActive (visible);
+
+    if (visible)
+        startTimerHz (pollHz);
+    else
+        stopTimer();
 }
 
 void LogPanel::timerCallback()

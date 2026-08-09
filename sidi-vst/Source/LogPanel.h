@@ -20,6 +20,7 @@ public:
     ~LogPanel() override;
 
     void resized() override;
+    void visibilityChanged() override;
 
 private:
     void timerCallback() override;

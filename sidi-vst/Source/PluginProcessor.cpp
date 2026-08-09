@@ -193,7 +193,12 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             currentSample += delta;
         }
 
-        midiLog.add (formatMidiMessageForLog (metadata.getMessage(), metadata.samplePosition));
+        // NB: Skip formatting entirely while the Log tab isn't visible (see MidiLog::setActive,
+        // driven by LogPanel::visibilityChanged) - the string building is the expensive part,
+        // not just the FIFO write, so gating only the write would leave most of the cost behind.
+        if (midiLog.isActive())
+            midiLog.add (formatMidiMessageForLog (metadata.getMessage(), metadata.samplePosition));
+
         midiInterpreter->process (metadata.getMessage());
     }
 

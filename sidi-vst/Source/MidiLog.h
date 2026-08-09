@@ -30,6 +30,12 @@ public:
 
     MidiLog() : fifo (fifoCapacity), buffer ((size_t) fifoCapacity) {}
 
+    // NB: Set by LogPanel::visibilityChanged() - lets the audio thread skip both the
+    // string formatting and the FIFO write entirely while nobody's looking at the Log
+    // tab, rather than just paying transport cost for a display nobody's rendering.
+    void setActive (bool shouldBeActive) noexcept { active.store (shouldBeActive, std::memory_order_relaxed); }
+    bool isActive() const noexcept { return active.load (std::memory_order_relaxed); }
+
     // NB: Audio thread. Drops the line rather than blocking or growing if the consumer
     // hasn't drained fast enough - acceptable for a diagnostic log, unacceptable would be
     // stalling the audio callback to guarantee delivery.
@@ -67,6 +73,7 @@ public:
     }
 
 private:
+    std::atomic<bool> active { false };
     juce::AbstractFifo fifo;
     std::vector<juce::String> buffer;
 };
