@@ -26,6 +26,11 @@ void SidChipAdapter::write (int offset, uint8_t value)
         lastWrittenValues[(size_t) offset].store (value, std::memory_order_relaxed);
 }
 
+int SidChipAdapter::clock (int16_t* buf, int numSamples)
+{
+    return sid.clock (buf, numSamples);
+}
+
 uint8_t SidChipAdapter::getRegisterValue (int offset) const
 {
     if (offset < 0 || offset >= numRegisters)

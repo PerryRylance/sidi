@@ -27,6 +27,7 @@ public:
     explicit SidChipAdapter (reSIDfp::SID& sidChip);
 
     void write (int offset, uint8_t value) override;
+    int clock (int16_t* buf, int numSamples) override;
 
     // NB: Safe to call from any thread; used by the editor to display
     // live register state without touching the audio thread's sid object.

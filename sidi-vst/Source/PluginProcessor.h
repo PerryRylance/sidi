@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "MidiInterpreter.h"
 #include "SidChipAdapter.h"
+#include "AdsrWorkaroundEngine.h"
 #include "MidiLog.h"
 #include <memory>
 #include <vector>
@@ -75,11 +76,10 @@ public:
 
 private:
     //==============================================================================
-    void writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite);
-
     std::unique_ptr<reSIDfp::SID> sid;
     std::unique_ptr<SidChipAdapter> sidChipAdapter;
     std::unique_ptr<MidiInterpreter> midiInterpreter;
+    AdsrWorkaroundEngine adsrWorkaroundEngine;
     std::vector<int16_t> sidOutputBuffer;
     MidiLog midiLog;
 

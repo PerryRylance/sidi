@@ -135,6 +135,7 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     midiInterpreter = std::make_unique<MidiInterpreter> (*sidChipAdapter,
                                                            SidChipAdapter::DEFAULT_CONTROL_REGISTER,
                                                            SidChipAdapter::DEFAULT_SUSTAIN_RELEASE);
+    adsrWorkaroundEngine.prepare (sampleRate);
 
     sidOutputBuffer.resize ((size_t) samplesPerBlock);
 }
@@ -179,47 +180,24 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 {
     juce::ScopedNoDenormals noDenormals;
 
-    const int numSamples = buffer.getNumSamples();
-    int currentSample = 0;
-
-    for (const auto metadata : midiMessages)
-    {
-        const int delta = metadata.samplePosition - currentSample;
-
-        if (delta > 0)
-        {
-            sid->clock (sidOutputBuffer.data(), delta);
-            writeSidOutputToBuffer (buffer, currentSample, delta);
-            currentSample += delta;
-        }
-
-        // NB: Skip formatting entirely while the Log tab isn't visible (see MidiLog::setActive,
-        // driven by LogPanel::visibilityChanged) - the string building is the expensive part,
-        // not just the FIFO write, so gating only the write would leave most of the cost behind.
-        if (midiLog.isActive())
+    // NB: Skip formatting entirely while the Log tab isn't visible (see MidiLog::setActive,
+    // driven by LogPanel::visibilityChanged) - the string building is the expensive part,
+    // not just the FIFO write, so gating only the write would leave most of the cost behind.
+    // Deliberately logs the buffer exactly as it arrived, ahead of AdsrWorkaroundEngine's own
+    // interpretation - the point of this log is to see what actually came from the host, not
+    // which of these messages the engine deferred to a later block.
+    if (midiLog.isActive())
+        for (const auto metadata : midiMessages)
             midiLog.add (formatMidiMessageForLog (metadata.getMessage(), metadata.samplePosition));
 
-        midiInterpreter->process (metadata.getMessage());
-    }
+    adsrWorkaroundEngine.processBlock (buffer, midiMessages, *sidChipAdapter, *midiInterpreter, sidOutputBuffer);
 
-    if (currentSample < numSamples)
-    {
-        const int remaining = numSamples - currentSample;
-        sid->clock (sidOutputBuffer.data(), remaining);
-        writeSidOutputToBuffer (buffer, currentSample, remaining);
-    }
-}
-
-void NewProjectAudioProcessor::writeSidOutputToBuffer (juce::AudioBuffer<float>& buffer, int startSample, int numSamplesToWrite)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel, startSample);
-
-        for (int i = 0; i < numSamplesToWrite; ++i)
-            channelData[i] = (float) sidOutputBuffer[(size_t) i] / 32768.0f;
-
-    }
+    // NB: JUCE supports changing this mid-stream; the resulting host-side re-sync is a
+    // documented, accepted cost of engaging ADSR workaround mode (see AdsrWorkaroundEngine),
+    // not something callers are expected to avoid by e.g. only enabling it before playback starts.
+    const int latencySamples = adsrWorkaroundEngine.getLatencySamples();
+    if (latencySamples != getLatencySamples())
+        setLatencySamples (latencySamples);
 }
 
 //==============================================================================

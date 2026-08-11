@@ -36,6 +36,25 @@ public:
     uint8_t getMaxBendSemitones (int channel) const noexcept { return maxBendSemitones[(size_t) channel].load (std::memory_order_relaxed); }
     float getPitchBendAmount (int channel) const noexcept { return pitchBendAmount[(size_t) channel].load (std::memory_order_relaxed); }
 
+    // NB: See ContinuousController::AdsrWorkaroundGlobal/AdsrWorkaroundChannel.
+    // Global is a single engine-wide flag regardless of which channel the CC
+    // arrived on; the per-channel flag only has an effect while global is on.
+    bool isAdsrWorkaroundGlobalEnabled() const noexcept { return adsrWorkaroundGlobalEnabled.load (std::memory_order_relaxed); }
+    bool isAdsrWorkaroundEnabledForChannel (int channel) const noexcept { return adsrWorkaroundChannelEnabled[(size_t) channel].load (std::memory_order_relaxed); }
+
+    // NB: True after processNoteOn raised GATE+TEST together on channel (see
+    // processNoteOn) and until releaseAdsrHold(channel) - or a subsequent note
+    // off - clears it. The block-processing layer polls this right after
+    // feeding a note-on through process() to know whether to schedule a
+    // releaseAdsrHold() call ~30ms of chip time later.
+    bool hasPendingAdsrRelease (int channel) const noexcept { return pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed); }
+
+    // NB: Clears the TEST bit while leaving GATE alone - the "fully controlled,
+    // audible moment" in the MIDIbox SID manual's ADSR-bug workaround (hold
+    // GATE+TEST together for ~30ms, then release TEST). No-op if there's no
+    // pending hold on this channel (eg. it was already cleared by a note off).
+    void releaseAdsrHold (int channel);
+
 private:
     void processNoteOn (const juce::MidiMessage& message);
     void processNoteOff (const juce::MidiMessage& message);
@@ -54,6 +73,10 @@ private:
     std::array<std::atomic<int>, 3> lastPressedKey { -1, -1, -1 };
     uint8_t filterResonanceSelect = 0;
     uint8_t filterModeVolumeSelect = 0;
+
+    std::atomic<bool> adsrWorkaroundGlobalEnabled { false };
+    std::array<std::atomic<bool>, 3> adsrWorkaroundChannelEnabled { false, false, false };
+    std::array<std::atomic<bool>, 3> pendingAdsrRelease { false, false, false };
 
     std::array<std::atomic<uint8_t>, 3> rpnMsb { 127, 127, 127 };
     std::array<std::atomic<uint8_t>, 3> rpnLsb { 127, 127, 127 };

@@ -31,13 +31,16 @@ TEST_SOURCES := \
     NoteControlInterpretationTests.cpp \
     FilterInterpretationTests.cpp \
     VolumeInterpretationTests.cpp \
-    PitchBendAndRpnRangeInterpretationTests.cpp
+    PitchBendAndRpnRangeInterpretationTests.cpp \
+    AdsrWorkaroundInterpretationTests.cpp \
+    AdsrWorkaroundEngineTests.cpp
 
 OBJECTS := \
     $(BUILD_DIR)/JuceCoreModule.o \
     $(BUILD_DIR)/juce_core_CompilationTime.o \
     $(BUILD_DIR)/JuceAudioBasicsModule.o \
     $(BUILD_DIR)/MidiInterpreter.o \
+    $(BUILD_DIR)/AdsrWorkaroundEngine.o \
     $(BUILD_DIR)/Main.o \
     $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(TEST_SOURCES))
 
@@ -60,6 +63,9 @@ $(BUILD_DIR)/JuceAudioBasicsModule.o: Support/JuceAudioBasicsModule.cpp | $(BUIL
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/MidiInterpreter.o: ../Source/MidiInterpreter.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/AdsrWorkaroundEngine.o: ../Source/AdsrWorkaroundEngine.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/juce_core_CompilationTime.o: $(JUCE_MODULES)/juce_core/juce_core_CompilationTime.cpp | $(BUILD_DIR)

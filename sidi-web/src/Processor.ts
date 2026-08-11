@@ -11,6 +11,12 @@ export default class Processor
     private nextEventIndex: number = 0;
     private accumulatedDeltaSamples: number = 0;
 
+    // NB: Running ideal (unrounded) position, so independently Math.round()-ing every event's delta
+    // can't accumulate bias into audible drift over a long file - see getNumSamplesFromDelta.
+    private idealElapsedSeconds: number = 0;
+    private roundedElapsedSamples: number = 0;
+    private currentEventTotalSamples: number | null = null;
+
     constructor(
         // NB: Insists on SidChipAdapter, not the plain SID interface it also satisfies - so its
         // known power-on defaults (see SidChipAdapter.DEFAULT_*) can be passed to MidiInterpreter
@@ -32,13 +38,26 @@ export default class Processor
         );
     }
 
+    // NB: Called potentially many times for the same event (see the split-buffer branch in
+    // process(), which revisits the current event across calls without advancing nextEventIndex) -
+    // memoized per-event via currentEventTotalSamples so the cumulative correction below only
+    // applies once per event, not once per call.
     private getNumSamplesFromDelta(delta: number): number
     {
+        if (this.currentEventTotalSamples !== null)
+            return this.currentEventTotalSamples;
+
         const totalBeats = delta / this.midi.resolution.ticksPerQuarterNote;
         const secondsPerBeat = 60 / this.bpm;
         const deltaInSeconds = totalBeats * secondsPerBeat;
 
-        return Math.round(deltaInSeconds * this.sampleRate);
+        this.idealElapsedSeconds += deltaInSeconds;
+
+        const newRoundedElapsedSamples = Math.round(this.idealElapsedSeconds * this.sampleRate);
+        this.currentEventTotalSamples = newRoundedElapsedSamples - this.roundedElapsedSamples;
+        this.roundedElapsedSamples = newRoundedElapsedSamples;
+
+        return this.currentEventTotalSamples;
     }
 
     process(buffer: Int16Array, size?: number, loop: boolean = false): number
@@ -76,6 +95,7 @@ export default class Processor
                     this.accumulatedDeltaSamples += remainingBufferSamples;
 
                     // NB: Write remainingBufferSamples samples to internal buffer, copy remainingBufferSamples samples into external buffer starting from numSamplesWritten
+                    this.interpreter.flush();
                     this.sid.clock(this.buffer, remainingBufferSamples);
 
                     buffer.set(this.buffer.subarray(0, remainingBufferSamples), numSamplesWritten);
@@ -89,6 +109,7 @@ export default class Processor
                 {
                     this.accumulatedDeltaSamples = 0;
 
+                    this.interpreter.flush();
                     this.sid.clock(this.buffer, remainingDeltaSamples);
 
                     buffer.set(this.buffer.subarray(0, remainingDeltaSamples), numSamplesWritten);
@@ -101,6 +122,8 @@ export default class Processor
                 this.bpm = event.bpm;
             else
                 this.interpreter.process(event);
+
+            this.currentEventTotalSamples = null;
 
             if(loop)
                 this.nextEventIndex = (this.nextEventIndex + 1) % track.events.length;

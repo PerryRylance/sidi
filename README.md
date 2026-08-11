@@ -21,37 +21,54 @@ This table details how MIDI CC messages are mapped to the SID's internal registe
 
 Controllers which are `continuous` use the full range of the controlleres parameter value. Controllers which are `toggle` are __off__ when <= 63 and __on__ when >= 64.
 
-| CC  | Name              | Function                                                                   | Channel | Mode       |
-|-----|-------------------|----------------------------------------------------------------------------|---------|------------|
-| 6   | Data Entry MSB    | Sets pitch bend range in semitones (when RPN 0 is selected via CC 100/101) | 1 - 3   | continuous |
-| 7   | Main Volume       | Master volume                                                              | Any     | continuous |
-| 71  | Filter Resonance  | Filter resonance                                                           | Any     | continuous |
-| 74  | Filter Cutoff     | Filter cutoff frequency                                                    | Any     | continuous |
-| 75  | Pulse Width       | Oscillator pulse width                                                     | 1 - 3   | continuous |
-| 76  | Attack            | Envelope attack                                                            | 1 - 3   | continuous |
-| 77  | Decay             | Envelope decay                                                             | 1 - 3   | continuous |
-| 78  | Sustain           | Envelope sustain                                                           | 1 - 3   | continuous |
-| 79  | Release           | Envelope release                                                           | 1 - 3   | continuous |
-| 80  | Triangle          | Selects the triangle waveform                                              | 1 - 3   | toggle     |
-| 81  | Sawtooth          | Selects the sawtooth waveform                                              | 1 - 3   | toggle     |
-| 82  | Pulse             | Selects the pulse waveform                                                 | 1 - 3   | toggle     |
-| 83  | Noise             | Selects the noise waveform                                                 | 1 - 3   | toggle     |
-| 84  | Gate              | Gate bit (also set automatically by note on/off events)                    | 1 - 3   | toggle     |
-| 85  | Sync              | Oscillator hard sync                                                       | 1 - 3   | toggle     |
-| 86  | Ring              | Ring modulation                                                            | 1 - 3   | toggle     |
-| 87  | Test              | Test bit                                                                   | 1 - 3   | toggle     |
-| 88  | Filter Enable     | Routes the oscillator's output into the filter                             | 1 - 3   | toggle     |
-| 89  | Filter Low Pass   | Enables the filter's low pass mode                                         | Any     | toggle     |
-| 90  | Filter Band Pass  | Enables the filter's band pass mode                                        | Any     | toggle     |
-| 91  | Filter High Pass  | Enables the filter's high pass mode                                        | Any     | toggle     |
-| 92  | Oscillator 3 Mute | Disconnects oscillator 3's output from the mixer                           | Any     | toggle     |
-| 100 | RPN LSB           | Selects an RPN parameter (LSB), used with CC 101 and CC 6                  | 1 - 3   | continuous |
-| 101 | RPN MSB           | Selects an RPN parameter (MSB), used with CC 100 and CC 6                  | 1 - 3   | continuous |
+| CC  | Name                             | Function                                                                   | Channel | Mode       |
+|-----|----------------------------------|----------------------------------------------------------------------------|---------|------------|
+| 6   | Data Entry MSB                   | Sets pitch bend range in semitones (when RPN 0 is selected via CC 100/101) | 1 - 3   | continuous |
+| 7   | Main Volume                      | Master volume                                                              | Any     | continuous |
+| 71  | Filter Resonance                 | Filter resonance                                                           | Any     | continuous |
+| 74  | Filter Cutoff                    | Filter cutoff frequency                                                    | Any     | continuous |
+| 75  | Pulse Width                      | Oscillator pulse width                                                     | 1 - 3   | continuous |
+| 76  | Attack                           | Envelope attack                                                            | 1 - 3   | continuous |
+| 77  | Decay                            | Envelope decay                                                             | 1 - 3   | continuous |
+| 78  | Sustain                          | Envelope sustain                                                           | 1 - 3   | continuous |
+| 79  | Release                          | Envelope release                                                           | 1 - 3   | continuous |
+| 80  | Triangle                         | Selects the triangle waveform                                              | 1 - 3   | toggle     |
+| 81  | Sawtooth                         | Selects the sawtooth waveform                                              | 1 - 3   | toggle     |
+| 82  | Pulse                            | Selects the pulse waveform                                                 | 1 - 3   | toggle     |
+| 83  | Noise                            | Selects the noise waveform                                                 | 1 - 3   | toggle     |
+| 84  | Gate                             | Gate bit (also set automatically by note on/off events)                    | 1 - 3   | toggle     |
+| 85  | Sync                             | Oscillator hard sync                                                       | 1 - 3   | toggle     |
+| 86  | Ring                             | Ring modulation                                                            | 1 - 3   | toggle     |
+| 87  | Test                             | Test bit                                                                   | 1 - 3   | toggle     |
+| 88  | Filter Enable                    | Routes the oscillator's output into the filter                             | 1 - 3   | toggle     |
+| 89  | Filter Low Pass                  | Enables the filter's low pass mode                                         | Any     | toggle     |
+| 90  | Filter Band Pass                 | Enables the filter's band pass mode                                        | Any     | toggle     |
+| 91  | Filter High Pass                 | Enables the filter's high pass mode                                        | Any     | toggle     |
+| 92  | Oscillator 3 Mute                | Disconnects oscillator 3's output from the mixer                           | Any     | toggle     |
+| 93  | ADSR workaround mode             | Enables per-oscillator ADSR workaround (see below)                         | Any     | toggle     |
+| 94  | ADSR workaround (per oscillator) | Enables the oscillator ADSR workaround on a specific oscillator            | 1 - 3   | toggle     |
+| 100 | RPN LSB                          | Selects an RPN parameter (LSB), used with CC 101 and CC 6                  | 1 - 3   | continuous |
+| 101 | RPN MSB                          | Selects an RPN parameter (MSB), used with CC 100 and CC 6                  | 1 - 3   | continuous |
 
 ## Mechanisms
 - Sidi automatically sets the oscillator frequency based on MIDI note on event pitches.
 - Sidi automatically turns on the `GATE` bit when a MIDI note on message is received.
 - Sidi is monophonic, and will track the last note on key per channel, turning of the `GATE` bit when the most recent key pressed is released.
+
+### ADSR workaround
+Since [libresidfp](https://github.com/libsidplayfp/libresidfp) is a faithful reproduction of the SID, it features the infamous [ADSR quirk](https://csdb.dk/forums/?roomid=14&topicid=27340&showallposts=1), which you may experience by re-triggering notes whilst changing the envelope parameters - this sometimes creates a ~30ms delay effect which is especially noticable when trying to leverage a single oscillator for percussive patterns of varying timbre.
+
+Sidi provides CC's 93 and 94 as a workaround. Set CC 93 on (>= 64) to enable the mode globally. You can then toggle the workaround on and off per-oscillator using CC 94.
+
+When enabled (both globally and on a specific oscillator), this workaround will automatically perform a "hard restart":
+
+- At the end of the notes release
+- ~30ms before the next note on
+
+Whichever comes first.
+
+> ⚠️ Enabling the ADSR workaround globally will cause the plugin to run with a ~30ms latency. Most modern DAWs are capable of offsetting to account for this, but this mode may make sidi unsuitable for live performances.
+> ⚠️ Enabling the ADSR workaround on an oscillator will create an audible silence of ~30ms before the following note is triggered.
 
 ## Building
 

@@ -28,4 +28,21 @@ public:
         registers[(size_t) offset] = value;
         writeLog.push_back ({ offset, value });
     }
+
+    // NB: Fills buf with a monotonically increasing counter (unique across the
+    // whole test, not just this call) instead of silence/zero, so tests can tell
+    // exactly which clock() call produced which sample in an output buffer purely
+    // by its value - no DSP needed to make the segmentation observable.
+    int clock (int16_t* buf, int numSamples) override
+    {
+        clockLog.push_back (numSamples);
+
+        for (int i = 0; i < numSamples; ++i)
+            buf[i] = (int16_t) (nextSampleValue++);
+
+        return numSamples;
+    }
+
+    std::vector<int> clockLog;
+    int nextSampleValue = 0;
 };

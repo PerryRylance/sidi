@@ -137,6 +137,9 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
                         interpreter.process(event);
                     }
 
+                    // NB: These bits are written lazily - see MidiInterpreter.flush().
+                    interpreter.flush();
+
                     expect(sid.read(address)).toBe(expectedMask);
                 }
             );

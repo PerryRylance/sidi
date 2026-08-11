@@ -31,6 +31,15 @@ namespace ContinuousController
 
     constexpr int Oscillator3Mute = 92;
 
+    // Engine-level "ADSR bug" workaround (see MidiInterpreter's GATE+TEST hold
+    // logic): AdsrWorkaroundGlobal arms the plugin-wide latency plumbing that
+    // gives held notes room to resolve before reaching the output, on any
+    // channel; AdsrWorkaroundChannel then opts a specific oscillator in/out of
+    // actually using the hold. Global must be armed for the per-channel switch
+    // to have any effect.
+    constexpr int AdsrWorkaroundGlobal = 93;
+    constexpr int AdsrWorkaroundChannel = 94;
+
     constexpr int MainVolume = 7;
 
     // Standard MIDI RPN / Data Entry controller numbers, not SID-specific.

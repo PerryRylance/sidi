@@ -88,6 +88,23 @@ void MidiInterpreter::processNoteOn (const juce::MidiMessage& message)
         sid.write (offset + 4, (uint8_t) (controlRegister[(size_t) channel] & ~0x01));
 
     controlRegister[(size_t) channel] |= 0x01;
+
+    // NB: The real SID's envelope rate counter never resets (the "ADSR bug" -
+    // see the MIDIbox SID manual's drum section), so attack timing after a bare
+    // GATE edge can jitter by up to ~30ms depending on where that counter
+    // already was. Raising TEST alongside GATE forces a silent, deterministic
+    // oscillator/envelope reset; releaseAdsrHold() (called by the block layer
+    // once armed) then lowers TEST after a fixed hold, making the attack land
+    // at an exact, predictable moment instead of wherever the counter was.
+    const bool useAdsrWorkaround = adsrWorkaroundGlobalEnabled.load (std::memory_order_relaxed)
+        && adsrWorkaroundChannelEnabled[(size_t) channel].load (std::memory_order_relaxed);
+
+    if (useAdsrWorkaround)
+    {
+        controlRegister[(size_t) channel] |= 0x08;
+        pendingAdsrRelease[(size_t) channel] = true;
+    }
+
     sid.write (offset + 4, controlRegister[(size_t) channel]);
 }
 
@@ -100,9 +117,33 @@ void MidiInterpreter::processNoteOff (const juce::MidiMessage& message)
     {
         const int offset = channel * 7;
         controlRegister[(size_t) channel] &= (uint8_t) ~0x01;
+
+        // NB: A note off arriving mid-hold (before releaseAdsrHold's ~30ms hold
+        // has elapsed) must not leave TEST stuck high with GATE now low - that
+        // would silently keep resetting the oscillator instead of letting the
+        // release stage run.
+        if (pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed))
+        {
+            controlRegister[(size_t) channel] &= (uint8_t) ~0x08;
+            pendingAdsrRelease[(size_t) channel] = false;
+        }
+
         sid.write (offset + 4, controlRegister[(size_t) channel]);
         lastPressedKey[(size_t) channel] = -1;
     }
+}
+
+void MidiInterpreter::releaseAdsrHold (int channel)
+{
+    if (!pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed))
+        return;
+
+    controlRegister[(size_t) channel] &= (uint8_t) ~0x08;
+
+    const int offset = channel * 7;
+    sid.write (offset + 4, controlRegister[(size_t) channel]);
+
+    pendingAdsrRelease[(size_t) channel] = false;
 }
 
 void MidiInterpreter::processPitchWheel (const juce::MidiMessage& message)
@@ -267,6 +308,14 @@ void MidiInterpreter::processController (const juce::MidiMessage& message)
         case DataEntryMsb:
             if (rpnMsb[(size_t) channel] == 0 && rpnLsb[(size_t) channel] == 0)
                 maxBendSemitones[(size_t) channel] = (uint8_t) value;
+            break;
+
+        case AdsrWorkaroundGlobal:
+            adsrWorkaroundGlobalEnabled = (value >= 64);
+            break;
+
+        case AdsrWorkaroundChannel:
+            adsrWorkaroundChannelEnabled[(size_t) channel] = (value >= 64);
             break;
 
         default:

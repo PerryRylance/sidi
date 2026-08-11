@@ -11,6 +11,14 @@ export default class MidiInterpreter
     private attackDecay: Uint8Array = new Uint8Array(3);
     private sustainRelease: Uint8Array = new Uint8Array(3);
     private controlRegister: Uint8Array = new Uint8Array(3);
+    // NB: See flush() - the control register packs waveform select bits alongside gate/sync/ring/
+    // test, but a MIDI voice change typically arrives as several same-tick CC events (eg. Noise off
+    // then Tri on). Writing each one straight to the chip means the chip briefly, but really, sees an
+    // all-zero waveform selection mid-change - and reSIDfp's WaveformGenerator::writeCONTROL_REG
+    // faithfully treats that as the real "floating DAC input" hardware state, arming a ~55-800k-cycle
+    // fade timer that later corrupts whatever's actually playing when it expires. Deferring the write
+    // until the value has settled avoids ever exposing that transient state to the chip.
+    private controlRegisterDirty: boolean[] = [false, false, false];
     private lastPressedKey: Array<number | null> = [null, null, null];
     private filterResonanceSelect: number = 0;
     private filterModeVolumeSelect: number = 0;
@@ -94,6 +102,7 @@ export default class MidiInterpreter
 
         this.controlRegister[event.channel] |= 0x01;
         this.sid.write(offset + 4, this.controlRegister[event.channel]);
+        this.controlRegisterDirty[event.channel] = false;
     }
 
     private processPitchWheel(event: PitchWheelEvent): void
@@ -115,6 +124,7 @@ export default class MidiInterpreter
             const offset = event.channel * 7;
             this.controlRegister[event.channel] &= ~0x01;
             this.sid.write(offset + 4, this.controlRegister[event.channel]);
+            this.controlRegisterDirty[event.channel] = false;
             this.lastPressedKey[event.channel] = null;
         }
     }
@@ -235,12 +245,13 @@ export default class MidiInterpreter
                     [Noise]: 0x80,
                 };
                 const mask = maskMap[event.controller];
-                const address = event.channel * 7 + 4;
                 const currentVal = this.controlRegister[event.channel];
                 const newVal = on ? (currentVal | mask) : (currentVal & ~mask);
 
+                // NB: Not written to the chip here - see flush() and the comment on
+                // controlRegisterDirty for why.
                 this.controlRegister[event.channel] = newVal;
-                this.sid.write(address, newVal);
+                this.controlRegisterDirty[event.channel] = true;
                 break;
             }
             case 101: // RPN MSB Selection
@@ -259,6 +270,22 @@ export default class MidiInterpreter
                     this.maxBendSemitones[event.channel] = event.value;
                 }
                 break;
+        }
+    }
+
+    // NB: Commits any control register bits (waveform/sync/ring/test - not gate, which processNoteOn
+    // and processNoteOff always write immediately for their own reasons) deferred by processController.
+    // Must be called before any real time advance (Processor.process()'s clock() calls) - otherwise a
+    // voice change with no accompanying note on/off at the same tick would never reach the chip.
+    flush(): void
+    {
+        for (let channel = 0; channel < 3; channel++)
+        {
+            if (this.controlRegisterDirty[channel])
+            {
+                this.sid.write(channel * 7 + 4, this.controlRegister[channel]);
+                this.controlRegisterDirty[channel] = false;
+            }
         }
     }
 
