@@ -5,26 +5,33 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <vector>
 
-// Covers the sample-accurate delay-line/latency plumbing in AdsrWorkaroundEngine:
+// Covers the sample-accurate event-scheduling plumbing in AdsrWorkaroundEngine:
 // the one-off transition block (silence lead-in + catch-up clock + tail MIDI
 // queue), steady-state per-block clocking, and ADSR-hold-release scheduling
 // across block boundaries. See AdsrWorkaroundInterpretationTests.cpp for the
 // register-write-sequence contract this schedules against.
 //
-// Sample rate is fixed at 44100 throughout so the constants below (latency =
-// round(0.033 * 44100) = 1455, hold = round(0.030 * 44100) = 1323) are exact.
+// This engine deliberately reports no latency to the host: the silence
+// lead-in below is a one-off startup transient, not an ongoing per-sample
+// delay (every event after it lands at the exact output position it arrived
+// at - see testMessageAfterLeadInAppliesAtCorrectChipTimeOffset and
+// testReleaseScheduledWithinSameSteadyStateBlock), so there's nothing for a
+// host's plugin-delay-compensation to legitimately correct for.
+//
+// Sample rate is fixed at 44100 throughout so the constants below (silence
+// lead-in = round(0.033 * 44100) = 1455, hold = round(0.030 * 44100) = 1323)
+// are exact.
 class AdsrWorkaroundEngineTests : public juce::UnitTest
 {
 public:
     AdsrWorkaroundEngineTests() : juce::UnitTest ("ADSR workaround engine", "AdsrWorkaroundEngine") {}
 
     static constexpr double sampleRate = 44100.0;
-    static constexpr int latencySamples = 1455;
+    static constexpr int silenceLeadInSamples = 1455;
     static constexpr int holdSamples = 1323;
 
     void runTest() override
     {
-        testLatencyIsZeroBeforeAnyBlockRuns();
         testPassthroughWhenGlobalFlagIsOff();
         testFirstBlockAfterEnableWritesSilenceLeadIn();
         testMessageInSilenceLeadInIsDeferredToNextBlock();
@@ -32,25 +39,15 @@ public:
         testSteadyStateBlockClocksWholeBlockWhenNoEvents();
         testReleaseScheduledWithinSameSteadyStateBlock();
         testReleaseScheduledAcrossBlockBoundary();
-        testDisengageDropsLatencyWithoutCrashing();
+        testDisengageFallsBackToPassthroughWithoutCrashing();
     }
 
 private:
     std::vector<int16_t> sidOutputBuffer = std::vector<int16_t> (8192);
 
-    void testLatencyIsZeroBeforeAnyBlockRuns()
-    {
-        beginTest ("getLatencySamples is 0 before any block has run");
-
-        AdsrWorkaroundEngine engine;
-        engine.prepare (sampleRate);
-
-        expectEquals (engine.getLatencySamples(), 0);
-    }
-
     void testPassthroughWhenGlobalFlagIsOff()
     {
-        beginTest ("with the global flag off, a block clocks the whole buffer in one go with no added latency");
+        beginTest ("with the global flag off, a block clocks the whole buffer in one go with no added delay");
 
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
@@ -62,7 +59,6 @@ private:
 
         engine.processBlock (buffer, midi, sid, interpreter, sidOutputBuffer);
 
-        expectEquals (engine.getLatencySamples(), 0);
         expectEquals ((int) sid.clockLog.size(), 1);
         expectEquals (sid.clockLog[0], 512);
         expectWithinAbsoluteError (buffer.getSample (0, 0), 0.0f, 1.0e-6f);
@@ -71,7 +67,7 @@ private:
 
     void testFirstBlockAfterEnableWritesSilenceLeadIn()
     {
-        beginTest ("the first block after enabling the global flag writes latencySamples of silence, then clocks the remainder");
+        beginTest ("the first block after enabling the global flag writes a silence lead-in, then clocks the remainder");
 
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
@@ -85,15 +81,14 @@ private:
 
         engine.processBlock (buffer, midi, sid, interpreter, sidOutputBuffer);
 
-        expectEquals (engine.getLatencySamples(), latencySamples);
         expectEquals ((int) sid.clockLog.size(), 1);
-        expectEquals (sid.clockLog[0], 4096 - latencySamples);
+        expectEquals (sid.clockLog[0], 4096 - silenceLeadInSamples);
 
-        for (int i = 0; i < latencySamples; ++i)
+        for (int i = 0; i < silenceLeadInSamples; ++i)
             expectWithinAbsoluteError (buffer.getSample (0, i), 0.0f, 1.0e-6f);
 
-        expectWithinAbsoluteError (buffer.getSample (0, latencySamples), 0.0f, 1.0e-6f); // first fake chip sample is value 0
-        expectWithinAbsoluteError (buffer.getSample (0, latencySamples + 1), 1.0f / 32768.0f, 1.0e-6f);
+        expectWithinAbsoluteError (buffer.getSample (0, silenceLeadInSamples), 0.0f, 1.0e-6f); // first fake chip sample is value 0
+        expectWithinAbsoluteError (buffer.getSample (0, silenceLeadInSamples + 1), 1.0f / 32768.0f, 1.0e-6f);
     }
 
     void testMessageInSilenceLeadInIsDeferredToNextBlock()
@@ -109,7 +104,7 @@ private:
 
         juce::AudioBuffer<float> buffer (2, 4096);
         juce::MidiBuffer midi;
-        midi.addEvent (juce::MidiMessage::noteOn (1, 60, (juce::uint8) 127), 100); // 100 < latencySamples
+        midi.addEvent (juce::MidiMessage::noteOn (1, 60, (juce::uint8) 127), 100); // 100 < silenceLeadInSamples
 
         engine.processBlock (buffer, midi, sid, interpreter, sidOutputBuffer);
 
@@ -131,7 +126,7 @@ private:
 
     void testMessageAfterLeadInAppliesAtCorrectChipTimeOffset()
     {
-        beginTest ("a MIDI message landing after the lead-in is applied at chip-time (position - latencySamples)");
+        beginTest ("a MIDI message landing after the lead-in is applied at chip-time (position - silenceLeadInSamples)");
 
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
@@ -142,13 +137,13 @@ private:
 
         juce::AudioBuffer<float> buffer (2, 4096);
         juce::MidiBuffer midi;
-        const int pos = 2000; // >= latencySamples
+        const int pos = 2000; // >= silenceLeadInSamples
         midi.addEvent (juce::MidiMessage::controllerEvent (1, ContinuousController::FilterCutoff, 100), pos);
 
         engine.processBlock (buffer, midi, sid, interpreter, sidOutputBuffer);
 
-        const int expectedFirstSegment = pos - latencySamples;
-        const int expectedSecondSegment = (4096 - latencySamples) - expectedFirstSegment;
+        const int expectedFirstSegment = pos - silenceLeadInSamples;
+        const int expectedSecondSegment = (4096 - silenceLeadInSamples) - expectedFirstSegment;
 
         expectEquals ((int) sid.clockLog.size(), 2);
         expectEquals (sid.clockLog[0], expectedFirstSegment);
@@ -177,7 +172,6 @@ private:
 
         expectEquals ((int) sid.clockLog.size(), 1);
         expectEquals (sid.clockLog[0], 512);
-        expectEquals (engine.getLatencySamples(), latencySamples);
     }
 
     void testReleaseScheduledWithinSameSteadyStateBlock()
@@ -286,9 +280,9 @@ private:
         }
     }
 
-    void testDisengageDropsLatencyWithoutCrashing()
+    void testDisengageFallsBackToPassthroughWithoutCrashing()
     {
-        beginTest ("turning the global flag back off drops the latency again on the next block, without crashing");
+        beginTest ("turning the global flag back off falls back to plain passthrough clocking on the next block, without crashing");
 
         FakeSidChip sid;
         MidiInterpreter interpreter (sid);
@@ -299,15 +293,19 @@ private:
 
         juce::AudioBuffer<float> buffer (2, 4096);
         juce::MidiBuffer emptyMidi;
-        engine.processBlock (buffer, emptyMidi, sid, interpreter, sidOutputBuffer);
-        expectEquals (engine.getLatencySamples(), latencySamples);
+        engine.processBlock (buffer, emptyMidi, sid, interpreter, sidOutputBuffer); // engage
+        expectEquals ((int) sid.clockLog.size(), 1);
+        expectEquals (sid.clockLog[0], 4096 - silenceLeadInSamples);
 
         interpreter.process (juce::MidiMessage::controllerEvent (1, ContinuousController::AdsrWorkaroundGlobal, 0));
+        sid.clockLog.clear();
 
         juce::AudioBuffer<float> buffer2 (2, 512);
         engine.processBlock (buffer2, emptyMidi, sid, interpreter, sidOutputBuffer);
 
-        expectEquals (engine.getLatencySamples(), 0);
+        // Passthrough again - the whole block clocked in one go, no silence lead-in.
+        expectEquals ((int) sid.clockLog.size(), 1);
+        expectEquals (sid.clockLog[0], 512);
     }
 };
 

@@ -67,7 +67,7 @@ When enabled (both globally and on a specific oscillator), this workaround will 
 
 Whichever comes first.
 
-> ⚠️ Enabling the ADSR workaround globally will cause the plugin to run with a ~30ms latency. Most modern DAWs are capable of offsetting to account for this, but this mode may make sidi unsuitable for live performances.
+> ⚠️ Enabling the ADSR workaround globally causes a brief, one-off ~33ms silence in the plugin's output at the moment it engages. This isn't an ongoing latency and the plugin does not ask your DAW to offset for it.
 > ⚠️ Enabling the ADSR workaround on an oscillator will create an audible silence of ~30ms before the following note is triggered.
 
 ## Building

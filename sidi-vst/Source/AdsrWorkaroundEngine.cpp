@@ -5,7 +5,7 @@
 void AdsrWorkaroundEngine::prepare (double sampleRate)
 {
     holdSamples = (int) std::round (holdDurationMs / 1000.0 * sampleRate);
-    latencySamples = (int) std::round (latencyMs / 1000.0 * sampleRate);
+    silenceLeadInSamples = (int) std::round (silenceLeadInMs / 1000.0 * sampleRate);
     engaged = false;
     chipSampleCounter = 0;
     pendingTail.clear();
@@ -125,7 +125,7 @@ void AdsrWorkaroundEngine::runTransitionBlock (juce::AudioBuffer<float>& buffer,
                                                 ISidChip& sid, MidiInterpreter& interpreter, std::vector<int16_t>& sidOutputBuffer,
                                                 int numSamples)
 {
-    const int silenceSamples = juce::jmin (latencySamples, numSamples);
+    const int silenceSamples = juce::jmin (silenceLeadInSamples, numSamples);
     const int clockedSamples = numSamples - silenceSamples;
 
     buffer.clear (0, silenceSamples);

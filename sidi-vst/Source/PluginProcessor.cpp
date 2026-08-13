@@ -191,13 +191,6 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             midiLog.add (formatMidiMessageForLog (metadata.getMessage(), metadata.samplePosition));
 
     adsrWorkaroundEngine.processBlock (buffer, midiMessages, *sidChipAdapter, *midiInterpreter, sidOutputBuffer);
-
-    // NB: JUCE supports changing this mid-stream; the resulting host-side re-sync is a
-    // documented, accepted cost of engaging ADSR workaround mode (see AdsrWorkaroundEngine),
-    // not something callers are expected to avoid by e.g. only enabling it before playback starts.
-    const int latencySamples = adsrWorkaroundEngine.getLatencySamples();
-    if (latencySamples != getLatencySamples())
-        setLatencySamples (latencySamples);
 }
 
 //==============================================================================
