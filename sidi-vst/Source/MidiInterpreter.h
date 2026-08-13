@@ -42,17 +42,20 @@ public:
     bool isAdsrWorkaroundGlobalEnabled() const noexcept { return adsrWorkaroundGlobalEnabled.load (std::memory_order_relaxed); }
     bool isAdsrWorkaroundEnabledForChannel (int channel) const noexcept { return adsrWorkaroundChannelEnabled[(size_t) channel].load (std::memory_order_relaxed); }
 
-    // NB: True after processNoteOn raised GATE+TEST together on channel (see
-    // processNoteOn) and until releaseAdsrHold(channel) - or a subsequent note
-    // off - clears it. The block-processing layer polls this right after
-    // feeding a note-on through process() to know whether to schedule a
-    // releaseAdsrHold() call ~30ms of chip time later.
+    // NB: True after processNoteOn primed the ADSR registers to attack=0/
+    // sustain=max on channel (see processNoteOn) and until releaseAdsrHold(channel)
+    // - or a subsequent note off - clears it. The block-processing layer polls
+    // this right after feeding a note-on through process() to know whether to
+    // schedule a releaseAdsrHold() call ~30ms of chip time later.
     bool hasPendingAdsrRelease (int channel) const noexcept { return pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed); }
 
-    // NB: Clears the TEST bit while leaving GATE alone - the "fully controlled,
-    // audible moment" in the MIDIbox SID manual's ADSR-bug workaround (hold
-    // GATE+TEST together for ~30ms, then release TEST). No-op if there's no
-    // pending hold on this channel (eg. it was already cleared by a note off).
+    // NB: Restores the patch's real ATTACK_DECAY/SUSTAIN_RELEASE values in
+    // place of processNoteOn's priming ones - the "fully controlled, audible
+    // moment" once the ~30ms hold has given the envelope's rate counter time
+    // to recapture (see processNoteOn and https://csdb.dk/forums/?roomid=14&topicid=159900).
+    // GATE is left alone throughout - there's no TEST bit involved to release.
+    // No-op if there's no pending hold on this channel (eg. it was already
+    // cleared by a note off).
     void releaseAdsrHold (int channel);
 
 private:

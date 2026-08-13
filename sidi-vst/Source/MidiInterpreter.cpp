@@ -77,33 +77,57 @@ void MidiInterpreter::processNoteOn (const juce::MidiMessage& message)
 
     const int offset = channel * 7;
 
-    // NB: The envelope generator only (re)starts on a 0->1 GATE transition (see
-    // reSIDfp's EnvelopeGenerator::writeCONTROL_REG). When several percussive hits
-    // share one voice - the classic C64 trick of keeping one oscillator free for
-    // drums - a new hit can arrive before the previous one's note off, leaving GATE
-    // already high; writing 1 again would be a no-op at the chip level and the hit
-    // would silently fail to retrigger. Forcing GATE low first guarantees a real
-    // edge every time, regardless of what the incoming note on/off pairing did.
-    if ((controlRegister[(size_t) channel] & 0x01) != 0)
-        sid.write (offset + 4, (uint8_t) (controlRegister[(size_t) channel] & ~0x01));
-
-    controlRegister[(size_t) channel] |= 0x01;
-
-    // NB: The real SID's envelope rate counter never resets (the "ADSR bug" -
-    // see the MIDIbox SID manual's drum section), so attack timing after a bare
-    // GATE edge can jitter by up to ~30ms depending on where that counter
-    // already was. Raising TEST alongside GATE forces a silent, deterministic
-    // oscillator/envelope reset; releaseAdsrHold() (called by the block layer
-    // once armed) then lowers TEST after a fixed hold, making the attack land
-    // at an exact, predictable moment instead of wherever the counter was.
+    // NB: The real SID's envelope rate counter never resets between notes (the
+    // "ADSR bug" - see the MIDIbox SID manual's drum section and
+    // https://csdb.dk/forums/?roomid=14&topicid=159900), so attack timing after
+    // a bare GATE edge can jitter by up to ~30ms depending on where that counter
+    // already was. TEST does NOT touch the envelope generator at all (confirmed
+    // in that thread by someone who's read reSIDfp's ADSR implementation) - it
+    // only resets the waveform generator, so raising it bought nothing for the
+    // bug and only risked an audible click from resetting oscillator phase out
+    // from under a still-sounding voice.
     const bool useAdsrWorkaround = adsrWorkaroundGlobalEnabled.load (std::memory_order_relaxed)
         && adsrWorkaroundChannelEnabled[(size_t) channel].load (std::memory_order_relaxed);
 
     if (useAdsrWorkaround)
     {
-        controlRegister[(size_t) channel] |= 0x08;
         pendingAdsrRelease[(size_t) channel] = true;
+
+        // NB: Zeroing the whole control register guarantees a real 0->1 GATE
+        // edge below (see the "already gated" comment in the non-workaround
+        // branch - the same problem applies here), and priming attack=0/
+        // sustain=max on top of that clean edge makes the rate counter
+        // recapture near-instantly instead of jittering.
+        sid.write (offset + 4, 0x00);
+
+        // NB: GATE alone starts the envelope (reSIDfp's EnvelopeGenerator knows
+        // nothing about TEST), so without this the patch's real attack/decay
+        // would run to completion silently, and releasing the hold below would
+        // only ever reveal whatever's left of the envelope by then (eg. a kick
+        // with its punch already decayed away). Forcing attack=0, sustain=max
+        // here races the envelope to full peak and parks it there well within
+        // the hold, regardless of the patch's real values; releaseAdsrHold()
+        // swaps those real values back in once the hold elapses, so the
+        // audible decay starts fresh from peak, exactly on time.
+        sid.write (offset + 5, 0x00);
+        sid.write (offset + 6, 0xF0);
     }
+    else if ((controlRegister[(size_t) channel] & 0x01) != 0)
+    {
+        // NB: The envelope generator only (re)starts on a 0->1 GATE transition
+        // (see reSIDfp's EnvelopeGenerator::writeCONTROL_REG). When several
+        // percussive hits share one voice - the classic C64 trick of keeping
+        // one oscillator free for drums - a new hit can arrive before the
+        // previous one's note off, leaving GATE already high; writing 1 again
+        // would be a no-op at the chip level and the hit would silently fail
+        // to retrigger. Forcing GATE low first guarantees a real edge every
+        // time, regardless of what the incoming note on/off pairing did. The
+        // workaround branch above already gets this for free from its own
+        // zero-write, so this only runs when that branch didn't.
+        sid.write (offset + 4, (uint8_t) (controlRegister[(size_t) channel] & ~0x01));
+    }
+
+    controlRegister[(size_t) channel] |= 0x01;
 
     sid.write (offset + 4, controlRegister[(size_t) channel]);
 }
@@ -119,12 +143,14 @@ void MidiInterpreter::processNoteOff (const juce::MidiMessage& message)
         controlRegister[(size_t) channel] &= (uint8_t) ~0x01;
 
         // NB: A note off arriving mid-hold (before releaseAdsrHold's ~30ms hold
-        // has elapsed) must not leave TEST stuck high with GATE now low - that
-        // would silently keep resetting the oscillator instead of letting the
-        // release stage run.
+        // has elapsed) must not release using the priming ADSR values still
+        // sitting in the registers (see processNoteOn) - restore the patch's
+        // real values so GATE's fall uses the intended release rate.
         if (pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed))
         {
-            controlRegister[(size_t) channel] &= (uint8_t) ~0x08;
+            sid.write (offset + 5, attackDecay[(size_t) channel]);
+            sid.write (offset + 6, sustainRelease[(size_t) channel]);
+
             pendingAdsrRelease[(size_t) channel] = false;
         }
 
@@ -138,10 +164,15 @@ void MidiInterpreter::releaseAdsrHold (int channel)
     if (!pendingAdsrRelease[(size_t) channel].load (std::memory_order_relaxed))
         return;
 
-    controlRegister[(size_t) channel] &= (uint8_t) ~0x08;
-
     const int offset = channel * 7;
-    sid.write (offset + 4, controlRegister[(size_t) channel]);
+
+    // NB: Restore the patch's real ADSR values now that the hold has elapsed,
+    // so the audible decay/sustain starts from the intended shape at exactly
+    // this deterministic moment - see processNoteOn's priming comment. GATE
+    // itself never changed during the hold (there's no TEST bit to release
+    // here, see processNoteOn), so no control register write is needed.
+    sid.write (offset + 5, attackDecay[(size_t) channel]);
+    sid.write (offset + 6, sustainRelease[(size_t) channel]);
 
     pendingAdsrRelease[(size_t) channel] = false;
 }

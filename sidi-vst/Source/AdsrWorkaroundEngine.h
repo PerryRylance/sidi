@@ -9,7 +9,7 @@
 /**
     Owns the sample-accurate delay-line plumbing behind the "ADSR workaround"
     (see ContinuousController::AdsrWorkaroundGlobal/AdsrWorkaroundChannel and
-    MidiInterpreter's GATE+TEST hold). Kept separate from the AudioProcessor
+    MidiInterpreter's ADSR priming/hold). Kept separate from the AudioProcessor
     so the transition/steady-state block logic can be driven by a FakeSidChip
     in tests instead of the real reSIDfp::SID.
 
@@ -21,7 +21,7 @@
     that landed in the silent lead-in is queued to be replayed - ahead of that
     next block's own messages - once the chip actually reaches that moment.
     Every block after that runs at a constant latencySamples() delay, which is
-    what gives a held note's GATE+TEST resolution (~30ms, see MidiInterpreter)
+    what gives a held note's ADSR priming resolution (~30ms, see MidiInterpreter)
     room to land before the audio reaches the output.
 
     Turning the global flag off again drops the delay-line and any pending

@@ -62,7 +62,7 @@ void AdsrWorkaroundEngine::runEventLoop (juce::AudioBuffer<float>& buffer, ISidC
             interpreter.process (event.message);
 
             // NB: This note on may have just armed a hold (see MidiInterpreter's
-            // GATE+TEST logic). It was armed *during* this same loop, so the
+            // ADSR priming logic). It was armed *during* this same loop, so the
             // pre-sort at the top couldn't have known about it - if its release
             // falls within the range still left to process this call, splice a
             // release event in now instead of waiting for the next block's

@@ -7,9 +7,9 @@
 
 // Covers the sample-accurate delay-line/latency plumbing in AdsrWorkaroundEngine:
 // the one-off transition block (silence lead-in + catch-up clock + tail MIDI
-// queue), steady-state per-block clocking, and TEST-release scheduling across
-// block boundaries. See AdsrWorkaroundInterpretationTests.cpp for the register-
-// write-sequence contract this schedules against.
+// queue), steady-state per-block clocking, and ADSR-hold-release scheduling
+// across block boundaries. See AdsrWorkaroundInterpretationTests.cpp for the
+// register-write-sequence contract this schedules against.
 //
 // Sample rate is fixed at 44100 throughout so the constants below (latency =
 // round(0.033 * 44100) = 1455, hold = round(0.030 * 44100) = 1323) are exact.
@@ -211,16 +211,20 @@ private:
         expectEquals (sid.clockLog[2], 4096 - notePos - holdSamples);
 
         const int address = 4;
-        std::vector<int> gateAndTestBits;
+        std::vector<int> controlRegisterWrites;
         for (auto& write : sid.writeLog)
             if (write.offset == address)
-                gateAndTestBits.push_back (write.value & 0x09);
+                controlRegisterWrites.push_back (write.value & 0x01);
 
-        expectEquals ((int) gateAndTestBits.size(), 2);
-        if (gateAndTestBits.size() == 2)
+        // NB: Only the note on touches the control register (see
+        // MidiInterpreter::releaseAdsrHold - there's no TEST bit to release,
+        // so it never writes offset 4) - one write to zero it, one to raise
+        // GATE alone.
+        expectEquals ((int) controlRegisterWrites.size(), 2);
+        if (controlRegisterWrites.size() == 2)
         {
-            expectEquals (gateAndTestBits[0], 0x09); // GATE+TEST raised
-            expectEquals (gateAndTestBits[1], 0x01); // TEST released, GATE stays
+            expectEquals (controlRegisterWrites[0], 0x00); // control register zeroed
+            expectEquals (controlRegisterWrites[1], 0x01); // GATE alone raised
         }
 
         expect (! interpreter.hasPendingAdsrRelease (0));
@@ -270,10 +274,16 @@ private:
         expectEquals (sid.clockLog[2], expectedOffset);
         expectEquals (sid.clockLog[3], blockSize - expectedOffset);
 
-        const int address = 4;
-        expect (! sid.writeLog.empty());
-        expectEquals (sid.writeLog[sid.writeLog.size() - 1].offset, address);
-        expectEquals (sid.writeLog[sid.writeLog.size() - 1].value & 0x09, 0x01);
+        // releaseAdsrHold restores the real ATTACK_DECAY/SUSTAIN_RELEASE values
+        // and never touches the control register (see MidiInterpreter -
+        // there's no TEST bit to release), so the last two writes land on
+        // offsets 5 and 6, not 4.
+        expect (sid.writeLog.size() >= 2);
+        if (sid.writeLog.size() >= 2)
+        {
+            expectEquals (sid.writeLog[sid.writeLog.size() - 2].offset, 5);
+            expectEquals (sid.writeLog[sid.writeLog.size() - 1].offset, 6);
+        }
     }
 
     void testDisengageDropsLatencyWithoutCrashing()
