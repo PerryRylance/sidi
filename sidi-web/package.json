@@ -10,9 +10,7 @@
     "demo": "vite"
   },
   "dependencies": {
-    "@perry-rylance/midi": "^1.1.2",
-    "aubiojs": "^0.2.1",
-    "wav": "^1.0.2"
+    "@perry-rylance/midi": "^1.1.2"
   },
   "devDependencies": {
     "@types/audioworklet": "^0.0.100",
@@ -26,6 +24,7 @@
     "ts-jest": "^29.4.11",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "wav": "^1.0.2"
   }
 }
