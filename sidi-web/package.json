@@ -10,7 +10,7 @@
     "demo": "vite"
   },
   "dependencies": {
-    "@perry-rylance/midi": "^1.1.2"
+    "@perry-rylance/midi": "^1.1.3"
   },
   "devDependencies": {
     "@types/audioworklet": "^0.0.100",
