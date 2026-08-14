@@ -1,28 +1,20 @@
 import fs from "fs";
 import path from "path";
 
-import { File } from "@perry-rylance/midi";
 import createSIDModule from "../compiled/libresidfp";
 import Processor from "../src/Processor";
 import SidChipAdapter from "../src/SidChipAdapter";
 import { FileWriter } from "wav";
+import loadMidiFile from "./load-midi-file";
 
 async function main() {
     const filename = process.argv[2];
     if (!filename) {
-        console.error("Usage: npm run render:midi <midi-file>");
+        console.error("Usage: npm run render:midi -- <file.ts|.mid>");
         process.exit(1);
     }
 
-    const absolutePath = path.resolve(filename);
-    if (!fs.existsSync(absolutePath)) {
-        console.error(`File not found: ${absolutePath}`);
-        process.exit(1);
-    }
-
-    const fileBuffer = fs.readFileSync(absolutePath);
-    const arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
-    const midi = File.fromArrayBuffer(arrayBuffer);
+    const midi = await loadMidiFile(filename);
 
     midi.tracks.flatten();
 

@@ -37,3 +37,5 @@ const ContinuousController = {
 } as const;
 
 export default ContinuousController;
+
+export type ContinuousControllerValue = typeof ContinuousController[keyof typeof ContinuousController];

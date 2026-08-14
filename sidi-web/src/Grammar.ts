@@ -1,4 +1,6 @@
-import { ControllerEvent, ControllerType } from "@perry-rylance/midi";
+import { ControllerEvent, ControllerType, Event } from "@perry-rylance/midi";
+
+export type MidiEventGenerator = (...args: any[]) => Event[];
 
 const globalEventsChannel = 0;
 
