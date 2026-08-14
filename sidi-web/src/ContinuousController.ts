@@ -26,6 +26,13 @@ const ContinuousController = {
 
     Oscillator3Mute: 92,
 
+    // Engine-level "ADSR bug" workaround (see MidiInterpreter's ADSR priming/hold logic):
+    // AdsrWorkaroundGlobal arms the workaround on any channel; AdsrWorkaroundChannel then opts
+    // a specific oscillator in/out of actually using it. Global must be armed for the per-channel
+    // switch to have any effect. Mirrors sidi-vst's ContinuousController.h.
+    AdsrWorkaroundGlobal: 93,
+    AdsrWorkaroundChannel: 94,
+
     MainVolume: 7,
 } as const;
 

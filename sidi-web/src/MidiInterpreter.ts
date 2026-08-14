@@ -3,7 +3,7 @@ import { SID } from "../compiled/libresidfp";
 import { Pal } from "./ClockFrequencyHz";
 import ContinuousController from "./ContinuousController";
 
-const { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } = ContinuousController;
+const { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume, AdsrWorkaroundGlobal, AdsrWorkaroundChannel } = ContinuousController;
 
 export default class MidiInterpreter
 {
@@ -22,6 +22,10 @@ export default class MidiInterpreter
     private lastPressedKey: Array<number | null> = [null, null, null];
     private filterResonanceSelect: number = 0;
     private filterModeVolumeSelect: number = 0;
+
+    private adsrWorkaroundGlobalEnabled: boolean = false;
+    private adsrWorkaroundChannelEnabled: boolean[] = [false, false, false];
+    private pendingAdsrRelease: boolean[] = [false, false, false];
 
     private rpnMsb: Uint8Array = new Uint8Array([127, 127, 127]);
     private rpnLsb: Uint8Array = new Uint8Array([127, 127, 127]);
@@ -90,15 +94,53 @@ export default class MidiInterpreter
 
         const offset = event.channel * 7;
 
-        // NB: The envelope generator only (re)starts on a 0->1 GATE transition (see
-        // reSIDfp's EnvelopeGenerator::writeCONTROL_REG). When several percussive hits
-        // share one voice - the classic C64 trick of keeping one oscillator free for
-        // drums - a new hit can arrive before the previous one's note off, leaving GATE
-        // already high; writing 1 again would be a no-op at the chip level and the hit
-        // would silently fail to retrigger. Forcing GATE low first guarantees a real
-        // edge every time, regardless of what the incoming note on/off pairing did.
-        if (this.controlRegister[event.channel] & 0x01)
+        // NB: The real SID's envelope rate counter never resets between notes (the
+        // "ADSR bug" - see the MIDIbox SID manual's drum section and
+        // https://csdb.dk/forums/?roomid=14&topicid=159900), so attack timing after
+        // a bare GATE edge can jitter by up to ~30ms depending on where that counter
+        // already was. TEST does NOT touch the envelope generator at all (confirmed
+        // in that thread by someone who's read reSIDfp's ADSR implementation) - it
+        // only resets the waveform generator, so it buys nothing for the bug and
+        // only risks an audible click. Mirrors sidi-vst's MidiInterpreter.cpp.
+        const useAdsrWorkaround = this.adsrWorkaroundGlobalEnabled && this.adsrWorkaroundChannelEnabled[event.channel];
+
+        if (useAdsrWorkaround)
+        {
+            this.pendingAdsrRelease[event.channel] = true;
+
+            // NB: Zeroing the whole control register guarantees a real 0->1 GATE
+            // edge below (see the "already gated" comment in the non-workaround
+            // branch - the same problem applies here), and priming attack=0/
+            // sustain=max on top of that clean edge makes the rate counter
+            // recapture near-instantly instead of jittering.
+            this.sid.write(offset + 4, 0x00);
+
+            // NB: GATE alone starts the envelope (reSIDfp's EnvelopeGenerator knows
+            // nothing about TEST), so without this the patch's real attack/decay
+            // would run to completion silently, and releasing the hold later would
+            // only ever reveal whatever's left of the envelope by then (eg. a kick
+            // with its punch already decayed away). Forcing attack=0, sustain=max
+            // here races the envelope to full peak and parks it there well within
+            // the hold, regardless of the patch's real values; releaseAdsrHold()
+            // swaps those real values back in once the hold elapses, so the
+            // audible decay starts fresh from peak, exactly on time.
+            this.sid.write(offset + 5, 0x00);
+            this.sid.write(offset + 6, 0xF0);
+        }
+        else if (this.controlRegister[event.channel] & 0x01)
+        {
+            // NB: The envelope generator only (re)starts on a 0->1 GATE transition
+            // (see reSIDfp's EnvelopeGenerator::writeCONTROL_REG). When several
+            // percussive hits share one voice - the classic C64 trick of keeping
+            // one oscillator free for drums - a new hit can arrive before the
+            // previous one's note off, leaving GATE already high; writing 1 again
+            // would be a no-op at the chip level and the hit would silently fail
+            // to retrigger. Forcing GATE low first guarantees a real edge every
+            // time, regardless of what the incoming note on/off pairing did. The
+            // workaround branch above already gets this for free from its own
+            // zero-write, so this only runs when that branch didn't.
             this.sid.write(offset + 4, this.controlRegister[event.channel] & ~0x01);
+        }
 
         this.controlRegister[event.channel] |= 0x01;
         this.sid.write(offset + 4, this.controlRegister[event.channel]);
@@ -123,10 +165,65 @@ export default class MidiInterpreter
         {
             const offset = event.channel * 7;
             this.controlRegister[event.channel] &= ~0x01;
+
+            // NB: A note off arriving mid-hold (before releaseAdsrHold's ~30ms hold
+            // has elapsed) must not release using the priming ADSR values still
+            // sitting in the registers (see processNoteOn) - restore the patch's
+            // real values so GATE's fall uses the intended release rate.
+            if (this.pendingAdsrRelease[event.channel])
+            {
+                this.sid.write(offset + 5, this.attackDecay[event.channel]);
+                this.sid.write(offset + 6, this.sustainRelease[event.channel]);
+
+                this.pendingAdsrRelease[event.channel] = false;
+            }
+
             this.sid.write(offset + 4, this.controlRegister[event.channel]);
             this.controlRegisterDirty[event.channel] = false;
             this.lastPressedKey[event.channel] = null;
         }
+    }
+
+    // NB: True after processNoteOn primed the ADSR registers to attack=0/sustain=max on channel
+    // (see processNoteOn) and until releaseAdsrHold(channel) - or a subsequent note off - clears
+    // it. The scheduling layer (Processor) polls this right after feeding a note on through
+    // process() to know whether to schedule a releaseAdsrHold() call ~30ms of sample-time later.
+    // Mirrors sidi-vst's MidiInterpreter::hasPendingAdsrRelease.
+    hasPendingAdsrRelease(channel: number): boolean
+    {
+        return this.pendingAdsrRelease[channel];
+    }
+
+    // NB: Restores the patch's real ATTACK_DECAY/SUSTAIN_RELEASE values in place of processNoteOn's
+    // priming ones - the "fully controlled, audible moment" once the ~30ms hold has given the
+    // envelope's rate counter time to recapture (see processNoteOn and
+    // https://csdb.dk/forums/?roomid=14&topicid=159900). GATE is left alone throughout - there's
+    // no TEST bit involved to release. No-op if there's no pending hold on this channel (eg. it
+    // was already cleared by a note off). Mirrors sidi-vst's MidiInterpreter::releaseAdsrHold.
+    releaseAdsrHold(channel: number): void
+    {
+        if (!this.pendingAdsrRelease[channel])
+            return;
+
+        const offset = channel * 7;
+
+        this.sid.write(offset + 5, this.attackDecay[channel]);
+        this.sid.write(offset + 6, this.sustainRelease[channel]);
+
+        this.pendingAdsrRelease[channel] = false;
+    }
+
+    // NB: See ContinuousController.AdsrWorkaroundGlobal/AdsrWorkaroundChannel. Global is a single
+    // engine-wide flag regardless of which channel the CC arrived on; the per-channel flag only
+    // has an effect while global is on. Mirrors sidi-vst's MidiInterpreter's equivalent getters.
+    isAdsrWorkaroundGlobalEnabled(): boolean
+    {
+        return this.adsrWorkaroundGlobalEnabled;
+    }
+
+    isAdsrWorkaroundEnabledForChannel(channel: number): boolean
+    {
+        return this.adsrWorkaroundChannelEnabled[channel];
     }
 
     private processController(event: ControllerEvent): void
@@ -254,6 +351,15 @@ export default class MidiInterpreter
                 this.controlRegisterDirty[event.channel] = true;
                 break;
             }
+            case AdsrWorkaroundGlobal:
+                this.adsrWorkaroundGlobalEnabled = event.value >= 64;
+                break;
+
+            case AdsrWorkaroundChannel:
+                if(event.channel > 2) return;
+                this.adsrWorkaroundChannelEnabled[event.channel] = event.value >= 64;
+                break;
+
             case 101: // RPN MSB Selection
                 if(event.channel > 2) return;
                 this.rpnMsb[event.channel] = event.value;
