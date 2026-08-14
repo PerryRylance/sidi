@@ -17,7 +17,7 @@ const reset = (oscillator: number): Event[] => [
     new SawEvent(0, oscillator, false),
     new AttackEvent(0, oscillator, 0),
     new DecayEvent(0, oscillator, 0),
-    new SustainEvent(0, oscillator, 0),
+    new SustainEvent(0, oscillator, 0x7F),
     new ReleaseEvent(0, oscillator, 0)
 ];
 
@@ -52,11 +52,12 @@ const patches: Record<string, Record<string, MidiEventGenerator>> = {
             ...PitchBendRangeEventsFactory.create(oscillator, 36),
             new TriangleEvent(0, oscillator, true),
             new DecayEvent(0, oscillator, 50),
+            new SustainEvent(0, oscillator, 0),
 
             // NB: Produce the sound
-            new NoteOnEvent(0, oscillator, 36),
-            ...ramp((delta, amount) => new PitchWheelEvent(delta, oscillator, amount), 0, -1, ppqn),
-            new NoteOffEvent(0, oscillator, 36)
+            new NoteOnEvent(0, oscillator, 36), // TODO: Does the 0hz mess it up or is that a frequency floor
+            ...ramp((delta, amount) => new PitchWheelEvent(delta, oscillator, amount), 0, -1, ppqn / 2),
+            new NoteOffEvent(ppqn / 2, oscillator, 36)
         ],
         snare: () => [],
         hihat: (open: boolean = false) => []

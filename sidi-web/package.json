@@ -2,14 +2,14 @@
   "scripts": {
     "build:wasm": "npx tsx scripts/build-wasm.ts",
     "build:worklet": "npx tsx scripts/build-worklet.ts",
-    "render:midi": "npx tsx scripts/generate-wav.ts",
-    "listen:midi": "npx tsx scripts/listen.ts",
-    "explain:midi": "npx tsx scripts/explain.ts",
+    "midi:render": "npx tsx scripts/generate-wav.ts",
+    "midi:listen": "npx tsx scripts/listen.ts",
+    "midi:explain": "npx tsx scripts/explain.ts",
     "test": "vitest run",
     "demo": "vite"
   },
   "dependencies": {
-    "@perry-rylance/midi": "^1.1.4"
+    "@perry-rylance/midi": "^1.1.5"
   },
   "devDependencies": {
     "@types/audioworklet": "^0.0.100",
