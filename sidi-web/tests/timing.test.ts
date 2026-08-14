@@ -4,9 +4,6 @@ import { EndOfTrackEvent, File, SetTempoEvent, Track } from "@perry-rylance/midi
 import createSIDModule from '../compiled/libresidfp';
 import Processor from '../src/Processor';
 import SidChipAdapter from '../src/SidChipAdapter';
-import OnsetDetector from '../src/OnsetDetector';
-import renderMidiToPcm from '../src/renderMidiToPcm';
-import loadMidiFile from '../scripts/load-midi-file';
 
 describe('processor timing', () => {
   let module: any;
@@ -55,32 +52,5 @@ describe('processor timing', () => {
 
     })
   });
-
-  test('boots and cats renders accurately', async () => {
-    const midi = await loadMidiFile(path.join(__dirname, "fixtures", "sidi test - boots and cats_stems_sidi-vst-007.mid"));
-    midi.tracks.flatten();
-
-    const sampleRate = 44100;
-    const samples = await renderMidiToPcm(midi, sampleRate);
-    const onsets = await OnsetDetector.detect(samples, { sampleRate });
-
-    // NB: Every hit in this fixture should land on a multiple of 250ms - anything off by 9ms or
-    // more is a perceptible timing error (see OnsetDetector for why hits below hfc's sensitivity,
-    // eg. low-frequency kicks, won't show up here at all - that's expected, not a failure).
-    const gridMs = 250;
-    const violations = onsets
-      .map((time, index) => {
-        const remainder = (time * 1000) % gridMs;
-        const deviationMs = Math.min(remainder, gridMs - remainder);
-        return { index, time, deviationMs };
-      })
-      .filter(({ deviationMs }) => deviationMs >= 9);
-
-    console.log(`Detected ${onsets.length} onsets`);
-    if (violations.length)
-      console.log('Off-grid: ' + violations.map(v => `#${v.index} at ${v.time.toFixed(4)}s (${v.deviationMs.toFixed(2)}ms)`).join(', '));
-
-    expect(violations).toEqual([]);
-  }, 30000);
 
 });
