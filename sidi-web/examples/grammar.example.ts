@@ -11,6 +11,13 @@ const oscillators = {
     percussion: 2
 } as const;
 
+const ease = {
+    log: (x: number, k = 100) => {
+        x = Math.max(0, Math.min(1, x));
+        return Math.log(1 + k * x) / Math.log(1 + k);
+    }
+};
+
 const reset = (oscillator: number): Event[] => [
     new NoiseEvent(0, oscillator, false),
     new PulseEvent(0, oscillator, false),
@@ -24,25 +31,32 @@ const reset = (oscillator: number): Event[] => [
 
 const patches: Record<string, Record<string, MidiEventGenerator>> = {
     percussion: {
-        kick: (oscillator: number) => [
-            // NB: Init the sound
-            ...reset(oscillator).filter(event => !(event instanceof TriangleEvent)),
-            ...PitchBendRangeEventsFactory.create(oscillator, 36),
-            new TriangleEvent(0, oscillator, true),
-            new DecayEvent(0, oscillator, 50),
-            new SustainEvent(0, oscillator, 0),
+        kick: (oscillator: number) => {
+            const startingPitch = 0x50;
+            const bendRage = 0x4F;
+            const decayTime = 24;
 
-            // NB: Produce the sound
-            new NoteOnEvent(0, oscillator, 12 + 36), // TODO: Does the 0hz mess it up or is that a frequency floor
-            ...ramp(
-                ppqn / 2, 
-                128, 
-                0,
-                -1,
-                (delta, value) => new PitchWheelEvent(delta, oscillator, value)
-            ),
-            new NoteOffEvent(0, oscillator, 12 + 36)
-        ],
+            return [
+                // NB: Init the sound
+                ...reset(oscillator).filter(event => !(event instanceof TriangleEvent)),
+                ...PitchBendRangeEventsFactory.create(oscillator, bendRage),
+                new TriangleEvent(0, oscillator, true),
+                new DecayEvent(0, oscillator, decayTime),
+                new SustainEvent(0, oscillator, 0),
+
+                // NB: Produce the sound
+                new NoteOnEvent(0, oscillator, startingPitch), // TODO: Does the 0hz mess it up or is that a frequency floor
+                ...ramp(
+                    ppqn / 4, 
+                    128, 
+                    0,
+                    1,
+                    (delta, value) => new PitchWheelEvent(delta, oscillator, -ease.log(value, 10))
+                ),
+                new NoteOffEvent(ppqn / 4, oscillator, startingPitch),
+                new PitchWheelEvent(0, oscillator, 0)
+            ]
+        },
         snare: () => [],
         hihat: (open: boolean = false) => []
     }
@@ -50,7 +64,7 @@ const patches: Record<string, Record<string, MidiEventGenerator>> = {
 
 const patterns: Record<string, Record<string, Event[]>> = {
     percussion: {
-        kicks: [0, 1, 2, 3].flatMap(_ => patches.percussion.kick(oscillators.percussion))
+        kicks: [0, 1, 2, 3, 4, 5, 6, 7].flatMap(_ => patches.percussion.kick(oscillators.percussion))
     }
 };
 
