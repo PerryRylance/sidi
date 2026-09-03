@@ -228,7 +228,7 @@ export default class MidiInterpreter
 
     private processController(event: ControllerEvent): void
     {
-        switch(event.controller as number)
+        switch(Number(event.controller))
         {
             case FilterCutoff: {
                 const mapped = this.getExtrapolatedBitValue(event.value, 7, 11);

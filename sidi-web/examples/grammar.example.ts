@@ -1,6 +1,7 @@
 import { AdsrWorkaroundChannelEvent, AdsrWorkaroundGlobalEvent, AttackEvent, DecayEvent, MidiEventGenerator, NoiseEvent, PulseEvent, ReleaseEvent, SawEvent, SustainEvent, TriangleEvent } from "../src/Grammar";
 import { ContinuousControllerValue } from "../src/ContinuousController";
 import { ControllerEvent, Event, File, NoteOffEvent, NoteOnEvent, PitchBendRangeEventsFactory, PitchWheelEvent, Track } from "@perry-rylance/midi";
+import { ramp } from "@perry-rylance/midi-macros";
 
 const ppqn = 960;
 
@@ -21,29 +22,6 @@ const reset = (oscillator: number): Event[] => [
     new ReleaseEvent(0, oscillator, 0)
 ];
 
-const ramp = (generator: (delta: number, value: number) => Event, start: number, end: number, duration: number, steps?: number): Event[] => {
-
-    const result: Event[] = [];
-
-    if(!steps)
-        steps = Math.round(duration / (ppqn / 64));
-
-    // TODO: Handle drift / floating point accumulation
-    const delta = Math.round(duration / steps);
-    
-    for(let i = 0; i < steps; i++)
-    {
-        const interpolation = i / (steps - 1);
-        const value = (end * interpolation) - (start * (1 - interpolation));
-        const event = generator(delta, value);
-
-        result.push(event);
-    }
-
-    return result;
-
-}
-
 const patches: Record<string, Record<string, MidiEventGenerator>> = {
     percussion: {
         kick: (oscillator: number) => [
@@ -55,9 +33,15 @@ const patches: Record<string, Record<string, MidiEventGenerator>> = {
             new SustainEvent(0, oscillator, 0),
 
             // NB: Produce the sound
-            new NoteOnEvent(0, oscillator, 36), // TODO: Does the 0hz mess it up or is that a frequency floor
-            ...ramp((delta, amount) => new PitchWheelEvent(delta, oscillator, amount), 0, -1, ppqn / 2),
-            new NoteOffEvent(ppqn / 2, oscillator, 36)
+            new NoteOnEvent(0, oscillator, 12 + 36), // TODO: Does the 0hz mess it up or is that a frequency floor
+            ...ramp(
+                ppqn / 2, 
+                128, 
+                0,
+                -1,
+                (delta, value) => new PitchWheelEvent(delta, oscillator, value)
+            ),
+            new NoteOffEvent(0, oscillator, 12 + 36)
         ],
         snare: () => [],
         hihat: (open: boolean = false) => []
@@ -74,7 +58,7 @@ const header: Track = new Track();
 
 header.events = [
     new AdsrWorkaroundGlobalEvent(0, true),
-    new AdsrWorkaroundChannelEvent(0, oscillators.percussion, true) // TODO: Delta re-structure? Make it a delta(amount: number): this so you can chain? Could do same with the channel. Or everything for that matter. It would read much easier and be compatible...
+    new AdsrWorkaroundChannelEvent(0, oscillators.percussion, true) // TODO: Delta re-structure? Make it a delta(amount: number): this so you can chain? Could do same with the channel. Or everything for that matter. It would read much easier and be compatible... Could do events() and tracks() too if it's possible to make them callable
 ];
 
 const tracks: Track[] = [

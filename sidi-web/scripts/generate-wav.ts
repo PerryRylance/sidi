@@ -10,7 +10,7 @@ import loadMidiFile from "./load-midi-file";
 async function main() {
     const filename = process.argv[2];
     if (!filename) {
-        console.error("Usage: npm run render:midi -- <file.ts|.mid>");
+        console.error("Usage: npm run midi:render -- <file.ts|.mid>");
         process.exit(1);
     }
 
