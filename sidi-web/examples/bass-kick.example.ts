@@ -1,6 +1,6 @@
 import { File, NoteOffEvent, NoteOnEvent, PitchBendRangeEventsFactory, PitchWheelEvent, Track } from "@perry-rylance/midi";
-import { AdsrWorkaroundChannelEvent, AdsrWorkaroundGlobalEvent, PulseEvent, SawEvent } from "../src/Grammar";
-import { ramp, repeat, channel } from "@perry-rylance/midi-macros";
+import { AdsrWorkaroundChannelEvent, AdsrWorkaroundGlobalEvent, PulseEvent, PulseWidthEvent, SawEvent } from "../src/Grammar";
+import { ramp, repeat, channel, parallel, interpolate, cycle } from "@perry-rylance/midi-macros";
 
 const ppqn = 480;
 
@@ -17,14 +17,13 @@ const kick = () => {
             ppqn / 4,
             0,
             1,
-            (delta, x) => new PitchWheelEvent(delta).amount(Math.random())
-            // (delta, x) => new PitchWheelEvent(
-            //     delta, 
-            //     channel,
-            //     Math.pow(((1 - x) * (1 - x)), 30)
-            // )
+            (delta, x) => new PitchWheelEvent(
+                delta, 
+                2,
+                Math.pow(((1 - x) * (1 - x)), 4)
+            )
         ),
-        new NoteOffEvent().key(pitch) // TODO: Not really needed if the bass note stays the same?
+        new NoteOffEvent().key(pitch), // TODO: Not really needed if the bass note stays the same?
     ];
 
 };
@@ -37,11 +36,49 @@ const file = new File()
         ]),
         new Track().events(
             channel(2, [
-                new SawEvent().enabled(false),
-                new PulseEvent().enabled(true),
-                ...PitchBendRangeEventsFactory.create(2, 12),
-                ...kick()
-            ])
+                ...parallel([
+                    [
+                        new SawEvent().enabled(false),
+                        new PulseEvent().enabled(true),
+                        new PulseWidthEvent().value(0x3F),
+                        ...PitchBendRangeEventsFactory.create(2, 48),
+                        ...repeat(8, kick())
+                    ],
+                    cycle(
+                        ppqn * 8, 
+                        8 * 120,
+                        ppqn * 8,
+                        (delta, value) => new PulseWidthEvent(delta).value( 
+                            Math.round(
+                                0x3F + Math.sin(value) * 0x2F
+                            )
+                        )
+                    )
+                ])
+            ]),
+            
+            // channel(2,
+            //     parallel([
+            //         [
+            //             new SawEvent().enabled(false),
+            //             new PulseEvent().enabled(true),
+            //             new PulseWidthEvent().value(0x3F),
+            //             ...PitchBendRangeEventsFactory.create(2, 48),
+            //             ...repeat(8, kick())
+            //         ],
+            //         cycle(
+            //             ppqn * 8, 
+            //             8 * 120,
+            //             ppqn * 8,
+            //             (delta, value) => new PulseWidthEvent(delta).value( 
+            //                 Math.round(
+            //                     0x3F + Math.sin(value) * 0x2F
+            //                 )
+            //             )
+            //         )
+            //     ])
+            // )
+            
         )
     ]);
 
