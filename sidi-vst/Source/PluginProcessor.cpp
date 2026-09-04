@@ -134,7 +134,8 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     sidChipAdapter = std::make_unique<SidChipAdapter> (*sid);
     midiInterpreter = std::make_unique<MidiInterpreter> (*sidChipAdapter,
                                                            SidChipAdapter::DEFAULT_CONTROL_REGISTER,
-                                                           SidChipAdapter::DEFAULT_SUSTAIN_RELEASE);
+                                                           SidChipAdapter::DEFAULT_SUSTAIN_RELEASE,
+                                                           SidChipAdapter::DEFAULT_FILTER_MODE_VOLUME);
     adsrWorkaroundEngine.prepare (sampleRate);
 
     sidOutputBuffer.resize ((size_t) samplesPerBlock);

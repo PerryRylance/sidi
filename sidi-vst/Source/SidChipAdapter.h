@@ -23,6 +23,7 @@ public:
     // actually on the chip (see MidiInterpreter's constructor).
     static constexpr uint8_t DEFAULT_CONTROL_REGISTER = 0x20; // NB: Saw waveform, gate off
     static constexpr uint8_t DEFAULT_SUSTAIN_RELEASE = 0xF0;  // NB: Full sustain, no release
+    static constexpr uint8_t DEFAULT_FILTER_MODE_VOLUME = 0xf; // NB: Full volume, no filter mode bits
 
     explicit SidChipAdapter (reSIDfp::SID& sidChip);
 

@@ -15,7 +15,7 @@ SidChipAdapter::SidChipAdapter (reSIDfp::SID& sidChip)
     }
 
     // NB: Full volume
-    write (0x18, 0xf);
+    write (0x18, DEFAULT_FILTER_MODE_VOLUME);
 }
 
 void SidChipAdapter::write (int offset, uint8_t value)

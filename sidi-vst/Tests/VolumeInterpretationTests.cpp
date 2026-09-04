@@ -1,6 +1,7 @@
 #include "../Source/ContinuousController.h"
 #include "Support/FakeSidChip.h"
 #include "../Source/MidiInterpreter.h"
+#include "../Source/SidChipAdapter.h"
 #include <juce_core/juce_core.h>
 
 // Port of the 'volume interpretation' describe block in
@@ -16,6 +17,7 @@ public:
         {
             testVolumeNibble (channel);
             testVolumePreservesOtherBits (channel);
+            testPowerOnDefaultSeeding (channel);
         }
     }
 
@@ -64,6 +66,39 @@ private:
 
         interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 0));
         expectEquals ((int) sid.registers[0x18], 0x0F);
+    }
+
+    // NB: Regression coverage for a bug where MidiInterpreter's local $18 shadow
+    // (filterModeVolumeSelect) started at 0 instead of SidChipAdapter's real power-on value
+    // (DEFAULT_FILTER_MODE_VOLUME, 0x0F - full volume, no filter mode bits). $18 packs the filter
+    // mode select bits and the main volume nibble together, so the very first FilterLowPass/
+    // BandPass/HighPass/Oscillator3Mute CC - before any MainVolume CC ever arrived - did a
+    // read-modify-write against the stale all-zero shadow and silently zeroed the volume nibble,
+    // muting the chip outright regardless of any per-voice FilterEnable routing. See
+    // MidiInterpreter's constructor and PluginProcessor::prepareToPlay's construction call.
+    void testPowerOnDefaultSeeding (int channel)
+    {
+        beginTest ("without seeding, a filter mode CC arriving before any MainVolume CC zeroes the volume nibble, channel "
+                   + juce::String (channel));
+
+        {
+            FakeSidChip sid;
+            MidiInterpreter interpreter (sid);
+
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 127));
+            expectEquals ((int) sid.registers[0x18], 0x10);
+        }
+
+        beginTest ("seeding the constructor with SidChipAdapter::DEFAULT_FILTER_MODE_VOLUME preserves that volume when a filter mode CC arrives first, channel "
+                   + juce::String (channel));
+
+        {
+            FakeSidChip sid;
+            MidiInterpreter interpreter (sid, 0, 0, SidChipAdapter::DEFAULT_FILTER_MODE_VOLUME);
+
+            interpreter.process (juce::MidiMessage::controllerEvent (channel + 1, ContinuousController::FilterLowPass, 127));
+            expectEquals ((int) sid.registers[0x18], 0x10 | SidChipAdapter::DEFAULT_FILTER_MODE_VOLUME);
+        }
     }
 };
 

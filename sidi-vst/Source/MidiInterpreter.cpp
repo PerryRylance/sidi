@@ -19,7 +19,8 @@ namespace
     }
 }
 
-MidiInterpreter::MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister, uint8_t initialSustainRelease)
+MidiInterpreter::MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister, uint8_t initialSustainRelease,
+                                   uint8_t initialFilterModeVolumeSelect)
     : sid (sidChip)
 {
     for (int channel = 0; channel < 3; ++channel)
@@ -27,6 +28,12 @@ MidiInterpreter::MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegis
         controlRegister[(size_t) channel] = initialControlRegister;
         sustainRelease[(size_t) channel] = initialSustainRelease;
     }
+
+    // NB: Same reasoning as above - $18 packs filter mode select bits alongside the main volume
+    // nibble, and SidChipAdapter's power-on default (full volume, no filter mode) must be known
+    // here too, or the first FilterLowPass/BandPass/HighPass/Oscillator3Mute/MainVolume CC would
+    // read-modify-write against a stale all-zero shadow and stomp the volume nibble to silence.
+    filterModeVolumeSelect = initialFilterModeVolumeSelect;
 }
 
 void MidiInterpreter::process (const juce::MidiMessage& message)

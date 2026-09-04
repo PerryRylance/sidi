@@ -19,11 +19,13 @@
 class MidiInterpreter
 {
 public:
-    // NB: initialControlRegister/initialSustainRelease should be the real chip's power-on
-    // defaults (see SidChipAdapter::DEFAULT_CONTROL_REGISTER/DEFAULT_SUSTAIN_RELEASE) - write-only
-    // SID registers can't be read back reliably, so these shadow copies must be seeded explicitly
-    // by the caller rather than assumed here. Mirrors sidi-web/src/MidiInterpreter.ts's constructor.
-    explicit MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister = 0, uint8_t initialSustainRelease = 0);
+    // NB: initialControlRegister/initialSustainRelease/initialFilterModeVolumeSelect should be the
+    // real chip's power-on defaults (see SidChipAdapter::DEFAULT_CONTROL_REGISTER/
+    // DEFAULT_SUSTAIN_RELEASE/DEFAULT_FILTER_MODE_VOLUME) - write-only SID registers can't be read
+    // back reliably, so these shadow copies must be seeded explicitly by the caller rather than
+    // assumed here. Mirrors sidi-web/src/MidiInterpreter.ts's constructor.
+    explicit MidiInterpreter (ISidChip& sidChip, uint8_t initialControlRegister = 0, uint8_t initialSustainRelease = 0,
+                               uint8_t initialFilterModeVolumeSelect = 0);
 
     void process (const juce::MidiMessage& message);
 
