@@ -85,6 +85,8 @@ const tracks: Track[] = [
 
 const file: File = new File();
 
+file.resolution.ticksPerQuarterNote = ppqn;
+
 file.tracks = [
     header,
     ...tracks

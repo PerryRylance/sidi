@@ -14,27 +14,19 @@ abstract class OscillatorControllerEvent<C extends ControllerType, V extends num
 
 abstract class ToggleControllerEvent<C extends ControllerType> extends ControllerEvent<C>
 {
-    get enabled(): boolean
-    {
-        return this.value >= 0x40;
-    }
-
-    set enabled(enable: boolean)
+    enabled(enable: boolean = true): this
     {
         this.value = enable ? 0x7f : 0;
+        return this;
     }
 }
 
 abstract class OscillatorToggleControllerEvent<C extends ControllerType> extends OscillatorControllerEvent<C>
 {
-    get enabled(): boolean
-    {
-        return this.value >= 0x40;
-    }
-
-    set enabled(enable: boolean)
+    enabled(enable: boolean = true): this
     {
         this.value = enable ? 0x7f : 0;
+        return this;
     }
 }
 
@@ -99,7 +91,7 @@ export class TriangleEvent extends OscillatorToggleControllerEvent<80>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 80);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -108,7 +100,7 @@ export class SawEvent extends OscillatorToggleControllerEvent<81>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 81);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -117,7 +109,7 @@ export class PulseEvent extends OscillatorToggleControllerEvent<82>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 82);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -126,7 +118,7 @@ export class NoiseEvent extends OscillatorToggleControllerEvent<83>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 83);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -135,7 +127,7 @@ export class GateEvent extends OscillatorToggleControllerEvent<84>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 84);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -144,7 +136,7 @@ export class SyncEvent extends OscillatorToggleControllerEvent<85>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 85);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -153,7 +145,7 @@ export class RingEvent extends OscillatorToggleControllerEvent<86>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 86);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -162,7 +154,7 @@ export class TestEvent extends OscillatorToggleControllerEvent<87>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 87);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -171,7 +163,7 @@ export class FilterEnableEvent extends OscillatorToggleControllerEvent<88>
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 88);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -180,7 +172,7 @@ export class FilterLowPassEvent extends ToggleControllerEvent<89>
     constructor(delta?: number, enable: boolean = false)
     {
         super(delta, globalEventsChannel, 89);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -189,7 +181,7 @@ export class FilterBandPassEvent extends ToggleControllerEvent<90>
     constructor(delta?: number, enable: boolean = false)
     {
         super(delta, globalEventsChannel, 90);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -198,7 +190,7 @@ export class FilterHighPassEvent extends ToggleControllerEvent<91>
     constructor(delta?: number, enable: boolean = false)
     {
         super(delta, globalEventsChannel, 91);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -207,7 +199,7 @@ export class Oscillator3MuteEvent extends ToggleControllerEvent<92>
     constructor(delta?: number, enable: boolean = false)
     {
         super(delta, globalEventsChannel, 92);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -216,7 +208,7 @@ export class AdsrWorkaroundGlobalEvent extends ToggleControllerEvent<93>
     constructor(delta?: number, enable: boolean = false)
     {
         super(delta, globalEventsChannel, 93);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 
@@ -225,7 +217,7 @@ export class AdsrWorkaroundChannelEvent extends OscillatorToggleControllerEvent<
     constructor(delta?: number, oscillator: number = 0, enable: boolean = false)
     {
         super(delta, oscillator, 94);
-        this.enabled = enable;
+        this.enabled(enable);
     }
 }
 

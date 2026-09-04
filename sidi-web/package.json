@@ -12,7 +12,7 @@
     "@perry-rylance/midi": "^1.1.5"
   },
   "devDependencies": {
-    "@perry-rylance/midi-macros": "^0.0.1",
+    "@perry-rylance/midi-macros": "^0.0.2",
     "@types/audioworklet": "^0.0.100",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.3",
