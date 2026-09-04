@@ -1,4 +1,4 @@
-import { File, NoteOffEvent, NoteOnEvent, Track } from "@perry-rylance/midi";
+import { ChannelAftertouchEvent, File, NoteOffEvent, NoteOnEvent, PitchBendRangeEventsFactory, PitchWheelEvent, Track } from "@perry-rylance/midi";
 import { AdsrWorkaroundChannelEvent, AdsrWorkaroundGlobalEvent, DecayEvent, FilterBandPassEvent, FilterCutoffEvent, FilterEnableEvent, FilterHighPassEvent, FilterLowPassEvent, FilterResonanceEvent, NoiseEvent, SawEvent, SustainEvent, TriangleEvent } from "../src/Grammar";
 import { channel, interpolate, ramp, repeat } from "@perry-rylance/midi-macros";
 
@@ -10,31 +10,23 @@ const snare = () => {
 
     return [
         new NoteOnEvent().key(pitch),
-        // ...interpolate(ppqn, 24 * 4, (delta, interpolant, index) => 
-        //     index % 2 === 0 ?
-        //     [
-        //         new NoiseEvent(delta).enabled(false),
-        //         new TriangleEvent(0).enabled(true)
-        //     ] :
-        //     [
-        //         new TriangleEvent(delta).enabled(false),
-        //         new NoiseEvent(0).enabled(true)
-        //     ]
-        // ),
-        ...ramp(ppqn, 24 * 4, 0x7F, 0x0, (delta, value, index) =>
-            index % 2 === 0 ?
+        ...ramp(ppqn / 2, 24 * 2, 0x3F, 0x1A, (delta, value, index) => [
+            new FilterCutoffEvent(0, Math.round(value)),
+            ...(index % 2 === 0 ?
             [
-                new FilterCutoffEvent(0, Math.round(value)),
                 new NoiseEvent(delta).enabled(false),
+                new PitchWheelEvent().amount(0),
                 new TriangleEvent(0).enabled(true)
             ] :
             [
                 new FilterCutoffEvent(0, Math.round(value)),
                 new TriangleEvent(delta).enabled(false),
+                new PitchWheelEvent().amount(1),
                 new NoiseEvent(0).enabled(true)
-            ]
-        ),
-        new NoteOffEvent().key(pitch)
+            ])
+        ]),
+        new NoteOffEvent().key(pitch),
+        new ChannelAftertouchEvent(ppqn / 2)
     ];
 
 };
@@ -49,11 +41,11 @@ const file = new File()
             new FilterLowPassEvent().enabled(true),
             new FilterBandPassEvent().enabled(true),
             new FilterResonanceEvent().value(0x7F),
-            new FilterCutoffEvent().value(0x3F),
             ...channel(2, [
                 
                 new SawEvent().enabled(false),
-                new DecayEvent().value(0x3F),
+                ...PitchBendRangeEventsFactory.create(2, 12),
+                new DecayEvent().value(0x4F),
                 new SustainEvent().value(0),
                 new FilterEnableEvent().enabled(true),
 
