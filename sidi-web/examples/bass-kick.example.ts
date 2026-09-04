@@ -4,8 +4,6 @@ import { ramp, repeat, channel, parallel, interpolate, cycle } from "@perry-ryla
 
 const ppqn = 480;
 
-// TODO: 480 / 128 is floating and I believe that causes silent failure
-
 const kick = () => {
 
     const pitch = 29;
@@ -35,8 +33,8 @@ const file = new File()
             ...( [0, 1, 2].map(channel => new AdsrWorkaroundChannelEvent(0, channel, true)) )
         ]),
         new Track().events(
-            channel(2, [
-                ...parallel([
+            channel(2, 
+                parallel([
                     [
                         new SawEvent().enabled(false),
                         new PulseEvent().enabled(true),
@@ -46,7 +44,7 @@ const file = new File()
                     ],
                     cycle(
                         ppqn * 8, 
-                        8 * 120,
+                        8 * 60,
                         ppqn * 8,
                         (delta, value) => new PulseWidthEvent(delta).value( 
                             Math.round(
@@ -55,30 +53,7 @@ const file = new File()
                         )
                     )
                 ])
-            ]),
-            
-            // channel(2,
-            //     parallel([
-            //         [
-            //             new SawEvent().enabled(false),
-            //             new PulseEvent().enabled(true),
-            //             new PulseWidthEvent().value(0x3F),
-            //             ...PitchBendRangeEventsFactory.create(2, 48),
-            //             ...repeat(8, kick())
-            //         ],
-            //         cycle(
-            //             ppqn * 8, 
-            //             8 * 120,
-            //             ppqn * 8,
-            //             (delta, value) => new PulseWidthEvent(delta).value( 
-            //                 Math.round(
-            //                     0x3F + Math.sin(value) * 0x2F
-            //                 )
-            //             )
-            //         )
-            //     ])
-            // )
-            
+            )
         )
     ]);
 
