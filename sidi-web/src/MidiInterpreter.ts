@@ -37,6 +37,7 @@ export default class MidiInterpreter
         private clockFrequencyHz: number = Pal,
         initialControlRegister: number = 0,
         initialSustainRelease: number = 0,
+        initialFilterModeVolumeSelect: number = 0,
     )
     {
         this.sid.setSamplingParameters(this.clockFrequencyHz, 0, this.pcmFrequencyHz);
@@ -51,6 +52,12 @@ export default class MidiInterpreter
             this.controlRegister[channel] = initialControlRegister;
             this.sustainRelease[channel] = initialSustainRelease;
         }
+
+        // NB: Same reasoning as above - $18 packs filter mode select bits alongside the main volume
+        // nibble, and SidChipAdapter's power-on default (full volume, no filter mode) must be known
+        // here too, or the first FilterLowPass/BandPass/HighPass/Oscillator3Mute/MainVolume CC would
+        // read-modify-write against a stale all-zero shadow and stomp the volume nibble to silence.
+        this.filterModeVolumeSelect = initialFilterModeVolumeSelect;
     }
 
     private getExtrapolatedBitValue(value: number, inBits: number, outBits: number)

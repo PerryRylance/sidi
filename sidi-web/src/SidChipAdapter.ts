@@ -19,6 +19,7 @@ export default class SidChipAdapter implements SID
     // that later write's value, not what's actually "stored" at the address being read.
     static readonly DEFAULT_CONTROL_REGISTER = 0x20; // NB: Saw waveform, gate off
     static readonly DEFAULT_SUSTAIN_RELEASE = 0xF0; // NB: Full sustain, no release
+    static readonly DEFAULT_FILTER_MODE_VOLUME = 0xf; // NB: Full volume, no filter mode bits
 
     constructor(private sid: SID)
     {
@@ -33,7 +34,7 @@ export default class SidChipAdapter implements SID
         }
 
         // NB: Full volume
-        this.write(0x18, 0xf);
+        this.write(0x18, SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME);
     }
 
     setChipModel(model: ChipModel): void

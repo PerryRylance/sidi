@@ -49,6 +49,7 @@ export default class Processor
             this.clockFrequencyHz,
             SidChipAdapter.DEFAULT_CONTROL_REGISTER,
             SidChipAdapter.DEFAULT_SUSTAIN_RELEASE,
+            SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME,
         );
 
         this.holdSamples = Math.round(Processor.holdDurationMs / 1000 * this.sampleRate);

@@ -3,6 +3,8 @@ import createSIDModule from "../compiled/libresidfp";
 import { NoteOnEvent, NoteOffEvent, ControllerEvent, PitchWheelEvent } from "@perry-rylance/midi";
 import MidiInterpreter from "../src/MidiInterpreter";
 import ContinuousController from "../src/ContinuousController";
+import SidChipAdapter from "../src/SidChipAdapter";
+import { Pal } from "../src/ClockFrequencyHz";
 import mockSID from "./support/mockSid";
 
 const { Attack, Decay, Noise, Pulse, PulseWidth, Release, Saw, Sustain, Tri, Gate, Sync, Ring, Test, FilterCutoff, FilterResonance, FilterEnable, FilterLowPass, FilterBandPass, FilterHighPass, Oscillator3Mute, MainVolume } = ContinuousController;
@@ -582,6 +584,51 @@ describe.each([0, 1, 2])('with midi channel %i', (channel) => {
 
             // Verify Volume is preserved, and LP is cleared (0x0F)
             expect(sid.read(address)).toBe(0x0F);
+
+        });
+
+    });
+
+    describe('power-on default seeding for register $18', () => {
+
+        // NB: Regression coverage for a bug where MidiInterpreter's local $18 shadow
+        // (filterModeVolumeSelect) started at 0 instead of SidChipAdapter's real power-on value
+        // (0x0F - full volume, no filter mode bits). $18 packs the filter mode select bits and the
+        // main volume nibble together, so the very first FilterLowPass/BandPass/HighPass/
+        // Oscillator3Mute CC - before any MainVolume CC ever arrived - did a read-modify-write
+        // against the stale all-zero shadow and silently zeroed the volume nibble, muting the chip
+        // outright regardless of any per-voice FilterEnable routing. See Processor's
+        // `new MidiInterpreter(...)` call and SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME.
+
+        test('without seeding, a filter mode CC arriving before any MainVolume CC zeroes the volume nibble', () => {
+
+            const sid = mockSID(new module.SID());
+            const interpreter = new MidiInterpreter(sid);
+            const address = 0x18;
+
+            const lpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
+            lpEvent.controller = FilterLowPass;
+            lpEvent.value = 127;
+            interpreter.process(lpEvent);
+
+            expect(sid.read(address)).toBe(0x10);
+
+        });
+
+        test('seeding the constructor with SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME preserves that volume when a filter mode CC arrives first', () => {
+
+            const sid = mockSID(new module.SID());
+            const interpreter = new MidiInterpreter(sid, Pal, 0, 0, SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME);
+            const address = 0x18;
+
+            const lpEvent = new ControllerEvent(0, channel);
+            // @ts-ignore NB: See https://github.com/PerryRylance/midi/issues/10
+            lpEvent.controller = FilterLowPass;
+            lpEvent.value = 127;
+            interpreter.process(lpEvent);
+
+            expect(sid.read(address)).toBe(0x10 | SidChipAdapter.DEFAULT_FILTER_MODE_VOLUME);
 
         });
 
