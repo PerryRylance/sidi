@@ -6,3 +6,5 @@ dist/**/*.js
 dist/**/*.d.ts
 scratch/*.ts
 !scratch/c-major.ts
+tests/browser/__screenshots__/
+.vitest-attachments/

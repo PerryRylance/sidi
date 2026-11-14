@@ -1,0 +1,16 @@
+# Runs the post-build browser tests (real Chromium) against dist/. See vitest.browser.config.ts.
+# NB: Image tag must match the pinned "playwright" version in package.json.
+services:
+  browser-tests:
+    image: mcr.microsoft.com/playwright:v1.65.1-noble
+    working_dir: /app
+    # NB: Run as the host user so nothing in the bind mount ends up root-owned.
+    user: "${UID:-1000}:${GID:-1000}"
+    init: true
+    ipc: host
+    environment:
+      HOME: /tmp
+      CI: "1"
+    volumes:
+      - .:/app
+    command: npx vitest run --config vitest.browser.config.ts

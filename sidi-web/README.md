@@ -1,4 +1,8 @@
-# sidi-web
+# @perry-rylance/sidi
+
+## Usage
+
+
 
 ## reSID (libresidfp)
 

@@ -7,6 +7,8 @@ const SRC_DIR = path.join(ROOT, "src");
 const ENTRY = path.join(SRC_DIR, "SidiAudioWorkletProcessor.ts");
 const OUT_DIR = path.join(ROOT, "dist");
 const OUT_FILE = "SidiAudioWorkletProcessor.js";
+const LIBRARY_ENTRY = path.join(SRC_DIR, "index.ts");
+const LIBRARY_OUT_FILE = "index.js";
 
 async function buildScript() {
     await build({
@@ -30,6 +32,25 @@ async function buildScript() {
     });
 }
 
+async function buildLibrary() {
+    await build({
+        configFile: false,
+        build: {
+            lib: {
+                entry: LIBRARY_ENTRY,
+                formats: ["es"],
+                fileName: () => LIBRARY_OUT_FILE,
+            },
+            outDir: OUT_DIR,
+            emptyOutDir: false,
+            minify: false,
+            rollupOptions: {
+                external: ["fs", "path"],
+            },
+        },
+    });
+}
+
 function buildDeclarations() {
     const configPath = path.join(ROOT, "tsconfig.json");
     const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
@@ -44,7 +65,7 @@ function buildDeclarations() {
         rootDir: SRC_DIR,
     };
 
-    const program = ts.createProgram([ENTRY], compilerOptions);
+    const program = ts.createProgram([ENTRY, LIBRARY_ENTRY], compilerOptions);
     const emitResult = program.emit();
 
     const diagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
@@ -65,6 +86,7 @@ function buildDeclarations() {
 
 async function main() {
     await buildScript();
+    await buildLibrary();
     buildDeclarations();
 }
 
