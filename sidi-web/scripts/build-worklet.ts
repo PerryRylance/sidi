@@ -8,7 +8,8 @@ const ENTRY = path.join(SRC_DIR, "SidiAudioWorkletProcessor.ts");
 const OUT_DIR = path.join(ROOT, "dist");
 const OUT_FILE = "SidiAudioWorkletProcessor.js";
 const LIBRARY_ENTRY = path.join(SRC_DIR, "index.ts");
-const LIBRARY_OUT_FILE = "index.js";
+// NB: Explicit extensions so Node never has to guess the module format (package.json has no "type").
+const LIBRARY_OUT_FILES = { es: "index.mjs", cjs: "index.cjs" } as const;
 
 async function buildScript() {
     await build({
@@ -32,20 +33,29 @@ async function buildScript() {
     });
 }
 
-async function buildLibrary() {
+// NB: libresidfp.js (Emscripten) detects Node and then reaches for CommonJS globals - __dirname and require -
+// which don't exist in an ES module. Shim them, in Node only. A static `import "node:module"` would break
+// the same file in browsers, so this goes via process.getBuiltinModule (Node 20.16+/22.3+, see "engines").
+const ES_NODE_SHIM = `var __sidiNode = typeof process === "object" && process.versions && process.versions.node && process.getBuiltinModule;
+var require = __sidiNode ? process.getBuiltinModule("module").createRequire(import.meta.url) : undefined;
+var __dirname = __sidiNode ? process.getBuiltinModule("path").dirname(process.getBuiltinModule("url").fileURLToPath(import.meta.url)) : undefined;
+`;
+
+async function buildLibrary(format: keyof typeof LIBRARY_OUT_FILES) {
     await build({
         configFile: false,
         build: {
             lib: {
                 entry: LIBRARY_ENTRY,
-                formats: ["es"],
-                fileName: () => LIBRARY_OUT_FILE,
+                formats: [format],
+                fileName: () => LIBRARY_OUT_FILES[format],
             },
             outDir: OUT_DIR,
             emptyOutDir: false,
             minify: false,
             rollupOptions: {
                 external: ["fs", "path"],
+                output: format === "es" ? { banner: ES_NODE_SHIM } : {},
             },
         },
     });
@@ -86,7 +96,8 @@ function buildDeclarations() {
 
 async function main() {
     await buildScript();
-    await buildLibrary();
+    await buildLibrary("es");
+    await buildLibrary("cjs");
     buildDeclarations();
 }
 

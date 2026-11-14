@@ -3,9 +3,9 @@
 import { describe, expect, it } from "vitest";
 import { File } from "@perry-rylance/midi";
 import midiUrl from "../fixtures/boots-and-cats.mid?url";
-import { Processor, SidChipAdapter, ContinuousController, ClockFrequencyHz, createSIDModule } from "../../dist/index.js";
+import { Processor, SidChipAdapter, ContinuousController, ClockFrequencyHz, createSIDModule } from "../../dist/index.mjs";
 
-describe("built library (dist/index.js)", () =>
+describe("built library (dist/index.mjs)", () =>
 {
     it("exports the public API", () =>
     {

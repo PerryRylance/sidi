@@ -13,4 +13,4 @@ services:
       CI: "1"
     volumes:
       - .:/app
-    command: npx vitest run --config vitest.browser.config.ts
+    command: sh -c "npx vitest run --config vitest.browser.config.ts && npx vitest run --config vitest.node.config.ts"

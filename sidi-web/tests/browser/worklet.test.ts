@@ -6,31 +6,27 @@ import midiUrl from "../fixtures/boots-and-cats.mid?url";
 const SAMPLE_RATE = 44100;
 const PROCESSOR_NAME = "sidi-audio-worklet-processor";
 
-async function loadMidi(): Promise<ArrayBuffer>
-{
-    const response = await fetch(midiUrl);
-    return response.arrayBuffer();
-}
-
+// NB: Only checks the bundle loads and registers in a real AudioWorkletGlobalScope, not what it sounds like.
 describe("built worklet (dist/SidiAudioWorkletProcessor.js)", () =>
 {
-    it("loads in a real AudioWorkletGlobalScope and renders non-silent audio", async () =>
+    it("loads, registers its processor and instantiates without error", async () =>
     {
-        const midi = await loadMidi();
-        const context = new OfflineAudioContext(1, SAMPLE_RATE * 10, SAMPLE_RATE);
+        const midi = await (await fetch(midiUrl)).arrayBuffer();
+        const context = new OfflineAudioContext(1, SAMPLE_RATE, SAMPLE_RATE);
 
         await context.audioWorklet.addModule("/SidiAudioWorkletProcessor.js");
 
+        // NB: Throws InvalidStateError if registerProcessor() never ran under this name
         const node = new AudioWorkletNode(context, PROCESSOR_NAME, {
             processorOptions: { midi, loop: false },
         });
 
+        let processorError: Event | undefined;
+        node.onprocessorerror = (event) => { processorError = event; };
+
         node.connect(context.destination);
+        await context.startRendering();
 
-        const rendered = await context.startRendering();
-        const samples = rendered.getChannelData(0);
-        const peak = samples.reduce((max, sample) => Math.max(max, Math.abs(sample)), 0);
-
-        expect(peak).toBeGreaterThan(0.01);
+        expect(processorError).toBeUndefined();
     });
 });

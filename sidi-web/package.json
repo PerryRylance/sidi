@@ -12,7 +12,8 @@
     "midi:explain": "npx tsx scripts/explain.ts",
     "test": "vitest run",
     "demo": "vite",
-    "test:dist": "npm run build:worklet && docker compose run --rm browser-tests"
+    "test:dist": "npm run build:worklet && docker compose run --rm browser-tests",
+    "prepublishOnly": "npm test && npm run test:dist"
   },
   "dependencies": {
     "@perry-rylance/midi": "^1.1.5"
@@ -35,5 +36,8 @@
     "vite": "^8.0.16",
     "vitest": "^4.1.9",
     "wav": "^1.0.2"
+  },
+  "engines": {
+    "node": ">=20.16"
   }
 }
