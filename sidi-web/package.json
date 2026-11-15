@@ -4,6 +4,45 @@
   "license": "MIT",
   "description": "A MIDI interface for a web emulation of the famous SID chip",
   "version": "0.0.0",
+  "keywords": [
+    "midi",
+    "sid",
+    "c64",
+    "synth"
+  ],
+  "homepage": "https://perryrylance.dev",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./worklet": {
+      "types": "./dist/SidiAudioWorkletProcessor.d.ts",
+      "default": "./dist/SidiAudioWorkletProcessor.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/.gitkeep"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerryRylance/sidi.git",
+    "directory": "sidi-web"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build:wasm": "npx tsx scripts/build-wasm.ts",
     "build:worklet": "npx tsx scripts/build-worklet.ts",
@@ -12,10 +51,11 @@
     "midi:explain": "npx tsx scripts/explain.ts",
     "test": "vitest run",
     "demo": "vite",
-    "test:dist": "npm run build:worklet && docker compose run --rm browser-tests",
+    "test:dist": "npm run build:worklet && attw --pack . --profile node16 && docker compose run --rm browser-tests",
     "prepublishOnly": "npm test && npm run test:dist"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@perry-rylance/midi": "^1.1.5",
     "@perry-rylance/midi-macros": "^0.0.3",
     "@types/audioworklet": "^0.0.100",
@@ -29,6 +69,8 @@
     "happy-dom": "^20.10.3",
     "jest": "^30.4.2",
     "playwright": "1.65.1",
+    "rolldown": "1.0.3",
+    "rolldown-plugin-dts": "0.27.0",
     "ts-jest": "^29.4.11",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
