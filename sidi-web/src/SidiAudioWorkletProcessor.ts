@@ -11,6 +11,7 @@ export interface SidiAudioWorkletProcessorOptions
     processorOptions: {
         midi: ArrayBuffer;
         loop?: boolean;
+        sampleRate?: number;
     };
 }
 
@@ -26,7 +27,7 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
     {
         super();
 
-        const { midi, loop = false } = options.processorOptions;
+        const { midi, loop = false, sampleRate: rate = sampleRate } = options.processorOptions;
         const file = File.fromArrayBuffer(midi);
 
         this.loop = loop;
@@ -37,7 +38,7 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
         createSIDModule().then((module) =>
         {
             const sid = new SidChipAdapter(new module.SID());
-            this.processor = new Processor(sid, file);
+            this.processor = new Processor(sid, file, rate);
             this.post({ type: "ready" });
         }).catch((error: unknown) =>
         {

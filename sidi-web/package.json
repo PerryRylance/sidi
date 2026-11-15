@@ -3,7 +3,7 @@
   "author": "Perry Rylance",
   "license": "MIT",
   "description": "A MIDI interface for a web emulation of the famous SID chip",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "keywords": [
     "midi",
     "sid",
@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@perry-rylance/midi": "^1.1.5",
+    "@perry-rylance/midi": "^1.2.2",
     "@perry-rylance/midi-macros": "^0.0.3",
     "@types/audioworklet": "^0.0.100",
     "@types/node": "^25.9.3",
@@ -86,7 +86,7 @@
     "node": "^22.11.0 || ^24.0.0 || ^26.0.0"
   },
   "peerDependencies": {
-    "@perry-rylance/midi": "^1.1.5"
+    "@perry-rylance/midi": "^1.2.2"
   },
   "peerDependenciesMeta": {
     "@perry-rylance/midi": {

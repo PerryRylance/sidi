@@ -7,6 +7,9 @@ export interface CreateSidiNodeOptions
 {
     loop?: boolean;
 
+    /** Sample rate to render at. Defaults to the AudioContext's `sampleRate`. */
+    sampleRate?: number;
+
     /** Override where the worklet script is loaded from (e.g. a file placed by `sidi-publish`). */
     workletUrl?: string | URL;
 
@@ -109,12 +112,12 @@ function waitUntilReady(node: AudioWorkletNode, timeoutMs: number): Promise<void
  */
 export async function createSidiNode(context: BaseAudioContext, midi: ArrayBuffer, options: CreateSidiNodeOptions = {}): Promise<AudioWorkletNode>
 {
-    const { loop = false, workletUrl, readyTimeoutMs = 10_000 } = options;
+    const { loop = false, workletUrl, readyTimeoutMs = 10_000, sampleRate = context.sampleRate } = options;
 
     await loadSidiWorklet(context, workletUrl);
 
     const nodeOptions: AudioWorkletNodeOptions & SidiAudioWorkletProcessorOptions = {
-        processorOptions: { midi, loop },
+        processorOptions: { midi, loop, sampleRate },
     };
 
     const node = new AudioWorkletNode(context, PROCESSOR_NAME, nodeOptions);
