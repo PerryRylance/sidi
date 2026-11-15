@@ -2,6 +2,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    setupFiles: ['./tests/support/toEqualValue.ts'],
     // NB: Browser tests need a real browser and a built dist/ - run via `npm run test:dist`
     exclude: [...configDefaults.exclude, 'tests/browser/**', 'tests/node/**'],
   },
