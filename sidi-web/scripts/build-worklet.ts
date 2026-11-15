@@ -10,6 +10,8 @@ const ENTRY = path.join(SRC_DIR, "SidiAudioWorkletProcessor.ts");
 const OUT_DIR = path.join(ROOT, "dist");
 const OUT_FILE = "SidiAudioWorkletProcessor.js";
 const LIBRARY_ENTRY = path.join(SRC_DIR, "index.ts");
+const HELPER_ENTRY = path.join(SRC_DIR, "helper.ts");
+const HELPER_PLACEHOLDER = "__SIDI_WORKLET_URL__";
 // NB: Explicit extensions so Node never has to guess the module format (package.json has no "type").
 const LIBRARY_OUT_FILES = { es: "index.mjs", cjs: "index.cjs" } as const;
 
@@ -33,6 +35,35 @@ async function buildScript() {
             },
         },
     });
+}
+
+// NB: ESM only - the helper is main-thread browser code, and is a separate entry so importing it never pulls in
+// the WASM/Processor bundle. It must keep `new URL("./SidiAudioWorkletProcessor.js", import.meta.url)` intact
+// for the consumer's bundler to find.
+async function buildHelper() {
+    await build({
+        configFile: false,
+        build: {
+            lib: {
+                entry: HELPER_ENTRY,
+                formats: ["es"],
+                fileName: () => "helper.mjs",
+            },
+            outDir: OUT_DIR,
+            emptyOutDir: false,
+            minify: false,
+        },
+    });
+
+    const file = path.join(OUT_DIR, "helper.mjs");
+    const source = fs.readFileSync(file, "utf8");
+    // NB: Tolerates the bundler keeping the @vite-ignore comment, or rewriting `import.meta.url` to `"" + import.meta.url`
+    const placeholder = new RegExp(`new URL\\(\\s*(?:/\\*[^*]*\\*/\\s*)?"${HELPER_PLACEHOLDER}",\\s*(?:"" \\+ )?import\\.meta\\.url\\s*\\)`);
+
+    if (!placeholder.test(source))
+        throw new Error(`dist/helper.mjs doesn't contain the worklet URL placeholder - the bundler rewrote it, so consumers' bundlers can't find the worklet`);
+
+    fs.writeFileSync(file, source.replace(placeholder, `new URL("./${OUT_FILE}", import.meta.url)`));
 }
 
 // NB: libresidfp.js (Emscripten) detects Node and then reaches for CommonJS globals - __dirname and require -
@@ -88,6 +119,9 @@ async function buildDeclarations() {
     await library.write({ dir: OUT_DIR, format: "es", entryFileNames: "[name].mjs" });
     fs.copyFileSync(path.join(OUT_DIR, "index.d.mts"), path.join(OUT_DIR, "index.d.cts"));
 
+    const helper = await bundleOf(HELPER_ENTRY, "helper");
+    await helper.write({ dir: OUT_DIR, format: "es", entryFileNames: "[name].mjs" });
+
     // NB: The worklet's types are a plain .d.ts - the JS is a classic script, not an ES module or CJS module
     const worklet = await bundleOf(ENTRY, "SidiAudioWorkletProcessor");
     await worklet.write({ dir: OUT_DIR, format: "es", entryFileNames: "[name].mjs" });
@@ -98,6 +132,7 @@ async function main() {
     await buildScript();
     await buildLibrary("es");
     await buildLibrary("cjs");
+    await buildHelper();
     await buildDeclarations();
 }
 

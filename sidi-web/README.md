@@ -2,9 +2,76 @@
 
 ## Usage
 
+SIDI plays MIDI through an emulated SID chip, inside an [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) so the emulation runs off the main thread. The worklet is one self-contained script, which the browser has to be pointed at by URL.
 
+```
+npm install @perry-rylance/sidi
+```
 
-## reSID (libresidfp)
+```ts
+import { createSidiNode } from "@perry-rylance/sidi/helper";
+
+const context = new AudioContext();
+const midi = await (await fetch("/song.mid")).arrayBuffer();
+
+const node = await createSidiNode(context, midi, { loop: true });
+
+node.connect(context.destination);
+await context.resume(); // NB: Browsers only allow this after a user gesture, e.g. a click
+```
+
+`midi` is the raw bytes of a MIDI file, as an `ArrayBuffer`. You don't need to parse it first. If you want to build or edit MIDI in your app, [`@perry-rylance/midi`](https://www.npmjs.com/package/@perry-rylance/midi) pairs with this.
+
+### Without the helper
+
+If your build setup can't resolve the worklet for you, copy it somewhere your server serves statically, using the `sidi-publish` command with a destination path:
+
+```
+npx sidi-publish public/
+```
+
+- If the destination is a directory (it's created if it doesn't exist), the file keeps its name: `public/SidiAudioWorkletProcessor.js`.
+- If the destination ends in `.js` or `.mjs`, it's written to exactly that path: `npx sidi-publish public/js/sidi.js`.
+
+Then load it from wherever your server exposes it. The helper accepts the URL:
+
+```ts
+const node = await createSidiNode(context, midi, { workletUrl: "/SidiAudioWorkletProcessor.js" });
+```
+
+or you can skip the helper entirely, since the worklet is a standard AudioWorklet module:
+
+```ts
+await context.audioWorklet.addModule("/SidiAudioWorkletProcessor.js");
+
+const node = new AudioWorkletNode(context, "sidi-audio-worklet-processor", {
+    processorOptions: { midi, loop: true },
+});
+```
+
+The copied file is a snapshot of the installed version, so run `sidi-publish` again after upgrading the package. To do that automatically, add it to a script in your own `package.json`, for example `"postinstall": "sidi-publish public/"`.
+
+### API
+
+All exported from `@perry-rylance/sidi/helper`:
+
+| Export | |
+|---|---|
+| `createSidiNode(context, midi, options?)` | Loads the worklet into `context` (once per context) and resolves to an `AudioWorkletNode` playing `midi`. |
+| `loadSidiWorklet(context, workletUrl?)` | Just the loading step, if you want to construct the `AudioWorkletNode` yourself. Cached per context and URL; a failed load can be retried. |
+| `getWorkletUrl()` | The default worklet `URL`. |
+| `PROCESSOR_NAME` | The registered processor name, `"sidi-audio-worklet-processor"`. |
+
+`options`:
+
+| Option | Default | |
+|---|---|---|
+| `loop` | `false` | Restart the file when it ends. |
+| `workletUrl` | `getWorkletUrl()` | Load the worklet from this URL instead. |
+
+## Building
+
+### reSID (libresidfp)
 
 `libresidfp-main` (at the repo root) is a git submodule of [libsidplayfp/libresidfp](https://github.com/libsidplayfp/libresidfp), pinned to a specific commit. After cloning, or after resetting the submodule, run from the repo root:
 ```
