@@ -94,4 +94,8 @@ This compiles `agents/SID_bindings.cpp` against `../libresidfp-main/src` into `c
 - The compiled WASM module must exist at `compiled/libresidfp.js` (see above)
 
 ### Running
-Run `npm test`
+- `npm test` runs the unit tests against `src/`.
+- `npm run typecheck` type-checks the whole project.
+- `npm run test:dist` builds the package, then checks the built output the way a consumer would: `attw` for type resolution, then real Chromium and real Node (the worklet and library load and render, the Vite asset URL resolves, the `sidi-publish` CLI works). The browser and Node tests run in a Docker container (`docker compose`), so you'll need Docker running.
+
+`npm publish` runs all three first (`prepublishOnly`), and stops if any fail.

@@ -2,8 +2,8 @@ node_modules/
 compiled/libresidfp.js
 rendered/*.wav
 rendered/*.csv
-dist/**/*.js
-dist/**/*.d.ts
+dist/*
+!dist/.gitkeep
 scratch/*.ts
 !scratch/c-major.ts
 tests/browser/__screenshots__/
