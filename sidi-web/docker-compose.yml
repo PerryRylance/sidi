@@ -1,10 +1,25 @@
-# Runs the post-build browser tests (real Chromium) against dist/. See vitest.browser.config.ts.
-# NB: Image tag must match the pinned "playwright" version in package.json.
+# Post-build checks of dist/, run via `npm run test:dist`.
+#   browser-tests  real Chromium, Firefox and WebKit (see vitest.browser.config.ts)
+#   node-22/24/26  the Node suite on each supported Node version (see vitest.node.config.ts)
+# NB: The node-* services are the supported-Node matrix and must match package.json "engines". They use the
+# Debian-based images (not -alpine): node_modules is installed on the host, and its native binaries are glibc.
+x-node-tests: &node-tests
+  working_dir: /app
+  # NB: Run as the host user so nothing in the bind mount ends up root-owned.
+  user: "${UID:-1000}:${GID:-1000}"
+  init: true
+  environment:
+    HOME: /tmp
+    CI: "1"
+  volumes:
+    - .:/app
+  command: npx vitest run --config vitest.node.config.ts
+
 services:
   browser-tests:
+    # NB: Image tag must match the pinned "playwright" version in package.json.
     image: mcr.microsoft.com/playwright:v1.65.1-noble
     working_dir: /app
-    # NB: Run as the host user so nothing in the bind mount ends up root-owned.
     user: "${UID:-1000}:${GID:-1000}"
     init: true
     ipc: host
@@ -13,4 +28,16 @@ services:
       CI: "1"
     volumes:
       - .:/app
-    command: sh -c "npx vitest run --config vitest.browser.config.ts && npx vitest run --config vitest.node.config.ts"
+    command: npx vitest run --config vitest.browser.config.ts
+
+  node-22:
+    <<: *node-tests
+    image: node:22
+
+  node-24:
+    <<: *node-tests
+    image: node:24
+
+  node-26:
+    <<: *node-tests
+    image: node:26

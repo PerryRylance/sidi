@@ -60,7 +60,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "demo": "vite",
-    "test:dist": "npm run build:worklet && attw --pack . --profile node16 --ignore-rules cjs-resolves-to-esm && docker compose run --rm browser-tests",
+    "test:dist": "npm run build:worklet && attw --pack . --profile node16 --ignore-rules cjs-resolves-to-esm && docker compose run --rm browser-tests && npm run test:dist:node",
+    "test:dist:node": "docker compose run --rm node-22 && docker compose run --rm node-24 && docker compose run --rm node-26",
     "prepublishOnly": "npm run typecheck && npm test && npm run test:dist"
   },
   "devDependencies": {
@@ -82,7 +83,7 @@
     "wav": "^1.0.2"
   },
   "engines": {
-    "node": ">=20.16"
+    "node": "^22.11.0 || ^24.0.0 || ^26.0.0"
   },
   "peerDependencies": {
     "@perry-rylance/midi": "^1.1.5"

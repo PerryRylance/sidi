@@ -68,7 +68,7 @@ async function buildHelper() {
 
 // NB: libresidfp.js (Emscripten) detects Node and then reaches for CommonJS globals - __dirname and require -
 // which don't exist in an ES module. Shim them, in Node only. A static `import "node:module"` would break
-// the same file in browsers, so this goes via process.getBuiltinModule (Node 20.16+/22.3+, see "engines").
+// the same file in browsers, so this goes via process.getBuiltinModule (Node 22.3+; see "engines").
 const ES_NODE_SHIM = `var __sidiNode = typeof process === "object" && process.versions && process.versions.node && process.getBuiltinModule;
 var require = __sidiNode ? process.getBuiltinModule("module").createRequire(import.meta.url) : undefined;
 var __dirname = __sidiNode ? process.getBuiltinModule("path").dirname(process.getBuiltinModule("url").fileURLToPath(import.meta.url)) : undefined;

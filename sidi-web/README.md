@@ -8,6 +8,8 @@ SIDI plays MIDI through an emulated SID chip, inside an [AudioWorklet](https://d
 npm install @perry-rylance/sidi
 ```
 
+The worklet and helper run in the browser. If you use the library entry (`Processor` and friends) from Node, it supports the LTS lines: Node 22 (22.11 or later), 24 and 26.
+
 ```ts
 import { createSidiNode } from "@perry-rylance/sidi/helper";
 
@@ -116,6 +118,6 @@ This compiles `agents/SID_bindings.cpp` against `../libresidfp-main/src` into `c
 ### Running
 - `npm test` runs the unit tests against `src/`.
 - `npm run typecheck` type-checks the whole project.
-- `npm run test:dist` builds the package, then checks the built output the way a consumer would: `attw` for type resolution, then real Chromium, Firefox and WebKit, and real Node (the worklet and library load and render, the Vite asset URL resolves, the `sidi-publish` CLI works). The browser and Node tests run in a Docker container (`docker compose`), so you'll need Docker running.
+- `npm run test:dist` builds the package, then checks the built output the way a consumer would: `attw` for type resolution, then real Chromium, Firefox and WebKit, and real Node on each supported version: 22, 24 and 26 (the worklet and library load and render, the Vite asset URL resolves, the `sidi-publish` CLI works). The browser and Node tests run in Docker containers (`docker compose`), so you'll need Docker running. `npm run test:dist:node` runs just the Node matrix.
 
 `npm publish` runs all three first (`prepublishOnly`), and stops if any fail.
