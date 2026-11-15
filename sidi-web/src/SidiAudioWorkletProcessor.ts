@@ -4,6 +4,7 @@ import { File } from "@perry-rylance/midi";
 import createSIDModule from "../compiled/libresidfp";
 import SidChipAdapter from "./SidChipAdapter";
 import Processor from "./Processor";
+import type { SidiWorkletMessage } from "./SidiWorkletMessage";
 
 export interface SidiAudioWorkletProcessorOptions
 {
@@ -30,11 +31,23 @@ class SidiAudioWorkletProcessor extends AudioWorkletProcessor
 
         this.loop = loop;
 
+        // NB: Async failures here don't surface as a processorerror event or a rejected addModule() - they'd be
+        // an unhandled rejection inside the worklet scope that the main thread never hears about - so report
+        // them (and success) over the port. The helper's createSidiNode() waits on this.
         createSIDModule().then((module) =>
         {
             const sid = new SidChipAdapter(new module.SID());
             this.processor = new Processor(sid, file);
+            this.post({ type: "ready" });
+        }).catch((error: unknown) =>
+        {
+            this.post({ type: "error", message: error instanceof Error ? error.message : String(error) });
         });
+    }
+
+    private post(message: SidiWorkletMessage): void
+    {
+        this.port.postMessage(message);
     }
 
     process(_inputList: Float32Array[][], outputList: Float32Array[][], _parameters: Record<string, Float32Array>): boolean

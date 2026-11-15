@@ -96,7 +96,9 @@ export default class MidiInterpreter
         if(event.channel > 2)
             return;
 
-        this.lastPressedKey[event.channel] = event.key;
+        // NB: Number() because event.key is a callable accessor, a distinct function object per event -
+        // storing it as-is would make the === in processNoteOff never match (see also processController)
+        this.lastPressedKey[event.channel] = Number(event.key);
         this.updateFrequency(event.channel);
 
         const offset = event.channel * 7;
@@ -168,7 +170,7 @@ export default class MidiInterpreter
         if(event.channel > 2)
             return;
 
-        if (this.lastPressedKey[event.channel] === event.key)
+        if (this.lastPressedKey[event.channel] === Number(event.key))
         {
             const offset = event.channel * 7;
             this.controlRegister[event.channel] &= ~0x01;
