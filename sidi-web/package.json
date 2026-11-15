@@ -15,10 +15,8 @@
     "test:dist": "npm run build:worklet && docker compose run --rm browser-tests",
     "prepublishOnly": "npm test && npm run test:dist"
   },
-  "dependencies": {
-    "@perry-rylance/midi": "^1.1.5"
-  },
   "devDependencies": {
+    "@perry-rylance/midi": "^1.1.5",
     "@perry-rylance/midi-macros": "^0.0.3",
     "@types/audioworklet": "^0.0.100",
     "@types/jest": "^30.0.0",
@@ -39,5 +37,13 @@
   },
   "engines": {
     "node": ">=20.16"
+  },
+  "peerDependencies": {
+    "@perry-rylance/midi": "^1.1.5"
+  },
+  "peerDependenciesMeta": {
+    "@perry-rylance/midi": {
+      "optional": true
+    }
   }
 }
