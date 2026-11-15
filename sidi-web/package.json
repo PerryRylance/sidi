@@ -3,7 +3,7 @@
   "author": "Perry Rylance",
   "license": "MIT",
   "description": "A MIDI interface for a web emulation of the famous SID chip",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "keywords": [
     "midi",
     "sid",

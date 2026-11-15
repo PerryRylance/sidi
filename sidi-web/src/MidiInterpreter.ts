@@ -7,7 +7,6 @@ const { Attack, Decay, PulseWidth, Release, Sustain, Tri, Saw, Pulse, Noise, Gat
 
 export default class MidiInterpreter
 {
-    private pcmFrequencyHz: number = 44100;
     private attackDecay: Uint8Array = new Uint8Array(3);
     private sustainRelease: Uint8Array = new Uint8Array(3);
     private controlRegister: Uint8Array = new Uint8Array(3);
@@ -38,6 +37,7 @@ export default class MidiInterpreter
         initialControlRegister: number = 0,
         initialSustainRelease: number = 0,
         initialFilterModeVolumeSelect: number = 0,
+        private pcmFrequencyHz: number = 44100,
     )
     {
         this.sid.setSamplingParameters(this.clockFrequencyHz, 0, this.pcmFrequencyHz);
