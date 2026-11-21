@@ -1,6 +1,6 @@
 # @perry-rylance/sidi
 
-## Usage
+## Usage (browser)
 
 SIDI plays MIDI through an emulated SID chip, inside an [AudioWorklet](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorklet) so the emulation runs off the main thread. The worklet is one self-contained script, which the browser has to be pointed at by URL.
 
@@ -90,6 +90,42 @@ try {
 ```
 
 "Never reported ready" most often means the worklet file is from an older version than the helper, for example a copy made by `sidi-publish` before an upgrade.
+
+## Usage (Node)
+
+If you would prefer to generate PCM data directly:
+
+```ts
+import { File } from "@perry-rylance/midi";
+import { createSIDModule, SidChipAdapter, Processor } from "@perry-rylance/sidi";
+
+const midi = new File();
+const module = await createSIDModule();
+const sid = new SidChipAdapter(new module.SID());
+const processor = new Processor(sid, midi);
+const buffer = new Int16Array(44100);
+
+let numSamplesWritten: number;
+
+while(numSamplesWritten = processor.process(buffer))
+{
+    // Do something with the audio in the buffer
+}
+```
+
+Please note that this example won't render anything, you need to:
+
+- Supply some MIDI data, rather than a blank file
+- Size your buffer accordingly
+- Do something with the buffered data (eg write to disk)
+
+See `./scripts/generate-wav.ts` for an example that takes a TS filename as an input, takes the MIDI exported from that file and outputs a rendered WAV to the `./rendered` directory. You can use that like so:
+
+`npm run midi:render -- examples/song.example.ts`
+
+This script also supports `--watch`.
+
+For developers looking to do this as part of a composition workflow with VSC, I highly recommend getting the [AudioLens](https://marketplace.visualstudio.com/items?itemName=simzhou.audiolens) extension.
 
 ## Building
 
